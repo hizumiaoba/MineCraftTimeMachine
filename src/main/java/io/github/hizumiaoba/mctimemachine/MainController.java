@@ -152,7 +152,16 @@ public class MainController {
 
   @FXML
   void onOpenLauncherBtnClick() {
-    System.out.println("Open Launcher button clicked");
+    CompletableFuture.runAsync(() -> {
+      log.trace("create external process to open the launcher.");
+      log.trace("launcher path: {}", launcherExePathField.getText());
+      try {
+        Runtime.getRuntime().exec(launcherExePathField.getText());
+      } catch (IOException e) {
+        ExceptionPopup popup = new ExceptionPopup(e, "外部プロセスを開始できませんでした。", "MainController#onOpenLauncherBtnClick()$lambda");
+        popup.pop();
+      }
+    }, es);
   }
 
   @FXML
@@ -196,15 +205,5 @@ public class MainController {
   @FXML
   void onSpecialBackupNowBtnClick() {
     System.out.println("Special Backup Now button clicked");
-  }
-
-  @FXML
-  void onSpecialBackupNowWithShortcutChkboxClick() {
-    System.out.println("Special Backup Now with Shortcut checkbox clicked");
-  }
-
-  @FXML
-  void onBackupNowWithShortcutChkboxClick() {
-    System.out.println("Backup Now with Shortcut checkbox clicked");
   }
 }
