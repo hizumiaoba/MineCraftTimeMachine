@@ -1,5 +1,6 @@
 package io.github.hizumiaoba.mctimemachine;
 
+import io.github.hizumiaoba.mctimemachine.internal.ApplicationConfig;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
@@ -78,8 +79,17 @@ public class MainController {
   @FXML
   private CheckBox specialBackupNowWithShortcutChkbox;
 
+  private ApplicationConfig mainConfig;
+
   @FXML
   void initialize() {
+    mainConfig = ApplicationConfig.getInstance("application.properties");
+
+    savesFolderPathField.setText(mainConfig.load("saves_folder_path"));
+    backupSavingFolderPathField.setText(mainConfig.load("backup_saving_folder_path"));
+    launcherExePathField.setText(mainConfig.load("launcher_exe_path"));
+    backupCountSpinner.getValueFactory().setValue(Integer.parseInt(mainConfig.load("backup_count")));
+    backupScheduleDurationSpinner.getValueFactory().setValue(Integer.parseInt(mainConfig.load("backup_schedule_duration")));
   }
 
   @FXML

@@ -3,6 +3,8 @@ package io.github.hizumiaoba.mctimemachine.internal;
 import io.github.hizumiaoba.mctimemachine.api.Config;
 import io.github.hizumiaoba.mctimemachine.api.ExceptionPopup;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Properties;
@@ -13,12 +15,25 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ApplicationConfig implements Config {
 
-  private final String configFile;
+  private final Path configPath;
   private Properties properties;
-  private static final Map<String, ApplicationConfig> instances = new ConcurrentHashMap<>();
+  private static final Map<String, ApplicationConfig> instances;
+  private static final Map<String, String> defaultConfigSkeleton;
+
+  static {
+    instances = new ConcurrentHashMap<>();
+
+    defaultConfigSkeleton = Map.of(
+      "saves_folder_path", "C:\\Users\\%USERNAME%\\AppData\\Roaming\\.minecraft\\saves",
+      "backup_saving_folder_path", "path\\to\\your\\backup\\folder",
+      "launcher_exe_path", "C:\\XboxGames\\Minecraft Launcher\\Content\\Minecraft.exe",
+      "backup_schedule_duration", "20",
+      "backup_count", "5"
+    );
+  }
 
   private ApplicationConfig(String configFile) {
-    this.configFile = configFile;
+    this.configPath = Paths.get(configFile);
   }
 
   public static ApplicationConfig getInstance(String configFile) {
@@ -37,8 +52,13 @@ public class ApplicationConfig implements Config {
       return;
     }
     properties = new Properties();
+    if(Files.notExists(this.configPath)) {
+      properties.putAll(defaultConfigSkeleton);
+      save();
+      return;
+    }
     try {
-      properties.load(Paths.get(configFile).toFile().toURI().toURL().openStream());
+      properties.load(this.configPath.toFile().toURI().toURL().openStream());
     } catch (IOException e) {
       ExceptionPopup popup = new ExceptionPopup(e, "設定ファイルを読み込めなかったか、パスの変換に失敗しました。", "ApplicationConfig#load()");
       popup.pop();
@@ -63,7 +83,7 @@ public class ApplicationConfig implements Config {
       return;
     }
     try {
-      properties.store(Paths.get(configFile).toFile().toURI().toURL().openConnection()
+      properties.store(this.configPath.toFile().toURI().toURL().openConnection()
         .getOutputStream(), "Minecraft Time Machine Config");
     } catch (IOException e) {
       ExceptionPopup popup = new ExceptionPopup(e, "設定ファイルを保存できませんでした。書き込みが拒否されたか、パスの変換に失敗しました。", "ApplicationConfig#save()");
