@@ -186,29 +186,4 @@ public class MainController {
   void onBackupNowWithShortcutChkboxClick() {
     System.out.println("Backup Now with Shortcut checkbox clicked");
   }
-
-  @FXML
-  void onBackupCountSpinnerChange() {
-    System.out.println("Backup Count Spinner changed");
-  }
-
-  @FXML
-  void onBackupScheduleDurationSpinnerChange() {
-    System.out.println("Backup Schedule Duration Spinner changed");
-  }
-
-  @FXML
-  void onBackupSavingFolderPathFieldChange() {
-    System.out.println("Backup Saving Folder Path Field changed");
-  }
-
-  @FXML
-  void onLauncherExePathFieldChange() {
-    System.out.println("Launcher Exe Path Field changed");
-  }
-
-  @FXML
-  void onSavesFolderPathFieldChange() {
-    System.out.println("Saves Folder Path Field changed");
-  }
 }
