@@ -1,5 +1,6 @@
 package io.github.hizumiaoba.mctimemachine;
 
+import io.github.hizumiaoba.mctimemachine.api.Config;
 import io.github.hizumiaoba.mctimemachine.internal.ApplicationConfig;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -87,7 +88,7 @@ public class MainController {
   @FXML
   private TabPane mainTabPane;
 
-  private ApplicationConfig mainConfig;
+  private Config mainConfig;
 
   @FXML
   void initialize() {
