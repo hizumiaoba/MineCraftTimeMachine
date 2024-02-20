@@ -21,6 +21,8 @@ repositories {
 }
 
 val junitVersion: String = "5.10.1"
+val lombokVersion: String = "1.18.30"
+val jakartaVersion: String = "2.1.1"
 
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
@@ -43,13 +45,22 @@ dependencies {
     implementation("com.google.guava:guava:32.1.3-jre")
     // https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
     implementation("org.xerial:sqlite-jdbc:3.45.1.0")
+    implementation("org.projectlombok:lombok:${lombokVersion}")
+    // https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api
+    implementation("jakarta.annotation:jakarta.annotation-api:${jakartaVersion}")
 
     // test dependencies
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+    testImplementation("com.google.truth:truth:1.3.0")
+
+    // annotation processor
+    annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
+    testAnnotationProcessor("org.projectlombok:lombok:${lombokVersion}")
+    annotationProcessor("jakarta.annotation:jakarta.annotation-api:${jakartaVersion}")
 }
 
-tasks.withType<Test>() {
+tasks.withType<Test> {
     useJUnitPlatform()
 }
 
