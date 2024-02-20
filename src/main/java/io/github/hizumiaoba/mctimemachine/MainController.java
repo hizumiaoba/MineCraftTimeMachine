@@ -1,9 +1,17 @@
 package io.github.hizumiaoba.mctimemachine;
 
 import io.github.hizumiaoba.mctimemachine.api.Config;
+import io.github.hizumiaoba.mctimemachine.api.ExceptionPopup;
 import io.github.hizumiaoba.mctimemachine.internal.ApplicationConfig;
+import io.github.hizumiaoba.mctimemachine.internal.concurrent.ConcurrentThreadFactory;
+import java.awt.Desktop;
+import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -89,6 +97,11 @@ public class MainController {
   private TabPane mainTabPane;
 
   private Config mainConfig;
+  private static ExecutorService es;
+
+  static {
+    es = Executors.newCachedThreadPool(new ConcurrentThreadFactory("Main GUI", "Controller", true));
+  }
 
   @FXML
   void initialize() {
@@ -169,7 +182,15 @@ public class MainController {
 
   @FXML
   void onSendFeedbackBtnClick() {
-    System.out.println("Send Feedback button clicked");
+    CompletableFuture.runAsync(() -> {
+      log.trace("Opening browser to access the git repository.");
+      try {
+        Desktop.getDesktop().browse(URI.create("https://github.com/hizumiaoba/MineCraftTimeMachine/issues"));
+      } catch (IOException e) {
+        ExceptionPopup popup = new ExceptionPopup(e, "ブラウザを開けませんでした。", "MainController#onSendFeedbackBtnClick()$lambda");
+        popup.pop();
+      }
+    }, es);
   }
 
   @FXML

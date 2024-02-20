@@ -8,6 +8,7 @@ module io.github.hizumiaoba.mctimemachine {
   requires ch.qos.logback.classic;
   requires com.google.common;
   requires lombok;
+  requires annotations;
 
   opens io.github.hizumiaoba.mctimemachine to javafx.fxml;
   exports io.github.hizumiaoba.mctimemachine;
