@@ -83,8 +83,7 @@ public class ApplicationConfig implements Config {
       return;
     }
     try {
-      properties.store(this.configPath.toFile().toURI().toURL().openConnection()
-        .getOutputStream(), "Minecraft Time Machine Config");
+      properties.store(Files.newOutputStream(this.configPath), "Minecraft Time Machine Config");
     } catch (IOException e) {
       ExceptionPopup popup = new ExceptionPopup(e, "設定ファイルを保存できませんでした。書き込みが拒否されたか、パスの変換に失敗しました。", "ApplicationConfig#save()");
       popup.pop();

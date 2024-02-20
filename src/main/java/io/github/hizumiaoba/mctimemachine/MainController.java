@@ -8,8 +8,13 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class MainController {
 
 
@@ -79,15 +84,29 @@ public class MainController {
   @FXML
   private CheckBox specialBackupNowWithShortcutChkbox;
 
+  @FXML
+  private TabPane mainTabPane;
+
   private ApplicationConfig mainConfig;
 
   @FXML
   void initialize() {
     mainConfig = ApplicationConfig.getInstance("application.properties");
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      log.info("saving configurations.");
+      mainConfig.set("saves_folder_path", savesFolderPathField.getText());
+      mainConfig.set("backup_saving_folder_path", backupSavingFolderPathField.getText());
+      mainConfig.set("launcher_exe_path", launcherExePathField.getText());
+      mainConfig.set("backup_count", backupCountSpinner.getValue().toString());
+      mainConfig.set("backup_schedule_duration", backupScheduleDurationSpinner.getValue().toString());
+      mainConfig.save();
+    }));
 
     savesFolderPathField.setText(mainConfig.load("saves_folder_path"));
     backupSavingFolderPathField.setText(mainConfig.load("backup_saving_folder_path"));
     launcherExePathField.setText(mainConfig.load("launcher_exe_path"));
+    backupCountSpinner.setValueFactory(new IntegerSpinnerValueFactory(1, 100, 1));
+    backupScheduleDurationSpinner.setValueFactory(new IntegerSpinnerValueFactory(1, 2000, 1));
     backupCountSpinner.getValueFactory().setValue(Integer.parseInt(mainConfig.load("backup_count")));
     backupScheduleDurationSpinner.getValueFactory().setValue(Integer.parseInt(mainConfig.load("backup_schedule_duration")));
   }
