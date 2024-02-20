@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Copyright (c) 2015, 2019, Gluon and/or its affiliates.
+  All rights reserved. Use is subject to license terms.
+
+  This file is available and licensed under the following license:
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions
+  are met:
+
+  - Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+  - Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the distribution.
+  - Neither the name of Oracle Corporation nor the names of its
+    contributors may be used to endorse or promote products derived
+    from this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="190.0" prefWidth="920.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.hizumiaoba.mctimemachine.MainController">
+  <tabs>
+    <Tab text="メインツール">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <VBox prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <children>
+                        <HBox alignment="CENTER" prefHeight="60.0" prefWidth="920.0" spacing="10.0">
+                           <children>
+                              <Button fx:id="backupNowBtn" mnemonicParsing="false" onAction="#onBackupNowBtnClick" prefHeight="40.0" prefWidth="170.0" text="いますぐバックアップ" />
+                              <Button fx:id="backupScheduledBtn" layoutX="385.0" layoutY="20.0" mnemonicParsing="false" onAction="#onBackupScheduledBtnClick" prefHeight="40.0" prefWidth="170.0" text="定期バックアップ開始" />
+                              <Button fx:id="specialBackupNowBtn" layoutX="475.0" layoutY="20.0" mnemonicParsing="false" onAction="#onSpecialBackupNowBtnClick" prefHeight="40.0" prefWidth="170.0" text="いますぐ特殊バックアップ" />
+                              <Button fx:id="openBackupListBtn" layoutX="565.0" layoutY="20.0" mnemonicParsing="false" onAction="#onOpenBackupListBtnClick" prefHeight="40.0" prefWidth="170.0" text="バックアップリスト" />
+                              <Button fx:id="openLauncherBtn" layoutX="655.0" layoutY="20.0" mnemonicParsing="false" onAction="#onOpenLauncherBtnClick" prefHeight="40.0" prefWidth="170.0" text="ランチャー起動" />
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" prefHeight="40.0" prefWidth="920.0" spacing="30.0">
+                           <children>
+                              <CheckBox fx:id="backupNowWithShortcutChkbox" mnemonicParsing="false" onAction="#onBackupNowWithShortcutChkboxClick" text="Ctrl + Shift + B でいますぐバックアップを実行（一定時間後）" />
+                              <CheckBox fx:id="specialBackupNowWithShortcutChkbox" layoutX="30.0" layoutY="22.0" mnemonicParsing="false" onAction="#onSpecialBackupNowWithShortcutChkboxClick" text="Ctrl + Shift + Z でいますぐ特別バックアップを実行（一定時間後）" />
+                           </children>
+                           <opaqueInsets>
+                              <Insets />
+                           </opaqueInsets>
+                           <VBox.margin>
+                              <Insets />
+                           </VBox.margin>
+                           <padding>
+                              <Insets left="20.0" />
+                           </padding>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" prefHeight="40.0" prefWidth="920.0" spacing="15.0">
+                           <VBox.margin>
+                              <Insets />
+                           </VBox.margin>
+                           <children>
+                              <Label text="※以下の機能は実験段階です。ご使用の際は細心の注意を払っていただくとともに、あなた様のご意見・ご要望をお聞かせください！">
+                                 <font>
+                                    <Font name="System Bold" size="12.0" />
+                                 </font>
+                              </Label>
+                              <Button fx:id="sendFeedbackBtn" mnemonicParsing="false" onAction="#onSendFeedbackBtnClick" prefHeight="20.0" prefWidth="120.0" text="フィードバックを送る" />
+                           </children>
+                           <opaqueInsets>
+                              <Insets />
+                           </opaqueInsets>
+                           <padding>
+                              <Insets left="20.0" />
+                           </padding>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" prefHeight="63.0" prefWidth="920.0" spacing="15.0">
+                           <children>
+                              <Button fx:id="openConfigEditorBtn" mnemonicParsing="false" onAction="#onOpenConfigEditorBtnClick" prefHeight="40.0" prefWidth="170.0" text="コンフィグエディター" />
+                              <Button fx:id="openRelatedFolderBtn" layoutX="30.0" layoutY="17.0" mnemonicParsing="false" onAction="#onOpenRelatedFolderBtnClick" prefHeight="40.0" prefWidth="170.0" text="各種フォルダを開く" />
+                           </children>
+                           <padding>
+                              <Insets left="20.0" />
+                           </padding>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </children></AnchorPane>
+      </content>
+    </Tab>
+    <Tab text="設定">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <VBox prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="10.0">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" prefHeight="30.0" prefWidth="920.0" spacing="15.0">
+                           <children>
+                              <Label prefHeight="17.0" prefWidth="160.0" text=".minecraft savesフォルダのパス" HBox.hgrow="ALWAYS" />
+                              <TextField fx:id="savesFolderPathField" prefHeight="25.0" prefWidth="600.0" promptText="絶対パスを指定してください" />
+                              <Button fx:id="selectSavesFolderBtn" mnemonicParsing="false" onAction="#onSelectSavesFolderBtnClick" text="参照" />
+                              <Button fx:id="openSavesFolderBtn" mnemonicParsing="false" onAction="#onOpenSavesFolderBtnClick" text="開く" />
+                           </children>
+                           <VBox.margin>
+                              <Insets />
+                           </VBox.margin>
+                           <padding>
+                              <Insets left="20.0" />
+                           </padding>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="10.0" prefHeight="30.0" prefWidth="920.0" spacing="15.0">
+                           <children>
+                              <Label prefHeight="17.0" prefWidth="160.0" text="バックアップ先フォルダのパス" HBox.hgrow="ALWAYS" />
+                              <TextField fx:id="backupSavingFolderPathField" prefHeight="25.0" prefWidth="600.0" promptText="絶対パスを指定してください" />
+                              <Button fx:id="selectBackupSavingFolderBtn" mnemonicParsing="false" onAction="#onSelectBackupSavingFolderBtnClick" text="参照" />
+                              <Button fx:id="openBackupSavingFolderBtn" mnemonicParsing="false" onAction="#onOpenBackupSavingFolderBtnClick" text="開く" />
+                           </children>
+                           <padding>
+                              <Insets left="20.0" />
+                           </padding>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" layoutX="10.0" layoutY="40.0" prefHeight="30.0" prefWidth="920.0" spacing="15.0">
+                           <children>
+                              <Label prefHeight="17.0" prefWidth="160.0" text="ランチャー実行ファイルのパス" HBox.hgrow="ALWAYS" />
+                              <TextField fx:id="launcherExePathField" prefHeight="25.0" prefWidth="600.0" promptText="絶対パスを指定してください" />
+                              <Button fx:id="selectLauncherExeBtn" mnemonicParsing="false" onAction="#onSelectLauncherExeBtnClick" text="参照" />
+                           </children>
+                           <padding>
+                              <Insets left="20.0" />
+                           </padding>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" prefHeight="50.0" prefWidth="920.0" spacing="20.0">
+                           <children>
+                              <Label text="バックアップ保持数（個）" />
+                              <Spinner fx:id="backupCountSpinner" editable="true" prefHeight="25.0" prefWidth="70.0" />
+                              <Label layoutX="10.0" layoutY="10.0" text="自動バックアップ間隔（分）" />
+                              <Spinner fx:id="backupScheduleDurationSpinner" editable="true" layoutX="38.0" layoutY="10.0" prefHeight="25.0" prefWidth="70.0" />
+                           </children>
+                           <padding>
+                              <Insets left="20.0" />
+                           </padding>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </children></AnchorPane>
+      </content>
+    </Tab>
+  </tabs>
+</TabPane>
