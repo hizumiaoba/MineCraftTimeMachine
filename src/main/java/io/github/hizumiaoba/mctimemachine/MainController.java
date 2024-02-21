@@ -12,6 +12,7 @@ import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -97,7 +98,8 @@ public class MainController {
   private TabPane mainTabPane;
 
   private Config mainConfig;
-  private static ExecutorService es;
+  private static final ExecutorService es;
+  private static final ThreadFactory internalControllerThreadFactory = new ConcurrentThreadFactory("Internal", "Controller", false);
 
   static {
     es = Executors.newCachedThreadPool(new ConcurrentThreadFactory("Main GUI", "Controller", true));
@@ -106,7 +108,7 @@ public class MainController {
   @FXML
   void initialize() {
     mainConfig = ApplicationConfig.getInstance("application.properties");
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+    Runtime.getRuntime().addShutdownHook(internalControllerThreadFactory.newThread(() -> {
       log.info("saving configurations.");
       mainConfig.set("saves_folder_path", savesFolderPathField.getText());
       mainConfig.set("backup_saving_folder_path", backupSavingFolderPathField.getText());
