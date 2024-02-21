@@ -8,17 +8,29 @@ import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.text.SimpleDateFormat;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
@@ -99,10 +111,16 @@ public class MainController {
 
   private Config mainConfig;
   private static final ExecutorService es;
-  private static final ThreadFactory internalControllerThreadFactory = new ConcurrentThreadFactory("Internal", "Controller", false);
+  private static final ThreadFactory internalControllerThreadFactory = new ConcurrentThreadFactory(
+    "Internal", "Controller", true);
+  private static final ScheduledExecutorService backupSchedulerExecutors;
+  private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+  private static ScheduledFuture<?> backupScheduledFuture;
 
   static {
     es = Executors.newCachedThreadPool(new ConcurrentThreadFactory("Main GUI", "Controller", true));
+    backupSchedulerExecutors = Executors.newSingleThreadScheduledExecutor(
+      new ConcurrentThreadFactory("Backup", "Scheduler", true));
   }
 
   @FXML
@@ -116,6 +134,8 @@ public class MainController {
       mainConfig.set("backup_count", backupCountSpinner.getValue().toString());
       mainConfig.set("backup_schedule_duration", backupScheduleDurationSpinner.getValue().toString());
       mainConfig.save();
+      es.shutdownNow();
+      backupSchedulerExecutors.shutdownNow();
     }));
 
     savesFolderPathField.setText(mainConfig.load("saves_folder_path"));
@@ -127,14 +147,121 @@ public class MainController {
     backupScheduleDurationSpinner.getValueFactory().setValue(Integer.parseInt(mainConfig.load("backup_schedule_duration")));
   }
 
+  private void createBackupDirs() {
+    es.execute(() -> {
+      log.debug("Checking backup directories.");
+      try {
+        Files.createDirectories(Path.of(backupSavingFolderPathField.getText()));
+      } catch (IOException e) {
+        ExceptionPopup popup = new ExceptionPopup(e,
+          "バックアップ保存フォルダを作成できませんでした。", "MainController#initialize()$lambda");
+        popup.pop();
+      }
+      log.debug("Backup directories are ready.");
+    });
+  }
+
   @FXML
   void onBackupNowBtnClick() {
-    System.out.println("Backup Now button clicked");
+    createBackupDirs();
+    try {
+      createBackupRecursively(Paths.get(savesFolderPathField.getText()));
+    } catch (IOException e) {
+      ExceptionPopup popup = new ExceptionPopup(e, "バックアップを作成できませんでした。",
+        "MainController#onBackupNowBtnClick()$lambda");
+      popup.pop();
+    }
   }
 
   @FXML
   void onBackupScheduledBtnClick() {
+    createBackupDirs();
     System.out.println("Backup Scheduled button clicked");
+    if (backupScheduledFuture == null) {
+      log.trace("Guessed that the backup scheduler is not running.");
+      backupScheduledFuture = backupSchedulerExecutors.scheduleAtFixedRate(
+        () -> {
+          log.trace("Backup scheduler is running.");
+          try {
+            createBackupRecursively(Paths.get(savesFolderPathField.getText()));
+          } catch (IOException e) {
+            ExceptionPopup popup = new ExceptionPopup(e,
+              "定期バックアップ用のバックアップフォルダを作成できませんでした。",
+              "MainController#onBackupScheduledBtnClick()$lambda");
+            popup.pop();
+          }
+        }, 0,
+        backupScheduleDurationSpinner.getValue(), TimeUnit.MINUTES);
+      backupScheduledBtn.setText("定期バックアップ中！");
+      backupScheduledBtn.setStyle(
+        "-fx-background-color: #ff0000; -fx-text-fill: #fff; -fx-font-weight: bold;");
+    } else {
+      log.trace("Guessed that the backup scheduler is running.");
+      if (backupScheduledFuture.cancel(false)) {
+        log.debug("Backup scheduler could be canceled.");
+      }
+      backupScheduledBtn.setStyle("");
+      backupScheduledBtn.setText("定期バックアップ開始");
+      backupScheduledFuture = null;
+    }
+  }
+
+  private void deleteContent(Path p) {
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(p)) {
+      for (Path target : stream) {
+        if (Files.isDirectory(target)) {
+          deleteContent(target);
+        }
+        Files.deleteIfExists(target);
+      }
+    } catch (IOException e) {
+      log.error("Failed to delete content of directory: {}", p, e);
+    }
+  }
+
+  private void createBackupRecursively(Path p) throws IOException {
+    log.info("Commencing backup process.");
+    Path backupPath = Paths.get(
+      String.format("%s/%s", backupSavingFolderPathField.getText(), sdf.format(new Date())));
+    try (Stream<Path> stream = Files.list(backupPath.getParent())) {
+      long count = stream.filter(Files::isDirectory).filter(d -> !d.startsWith("Sp")).count();
+      log.debug("Number of directories to have backed up: {}", count);
+      if (count == backupCountSpinner.getValue()) {
+        log.debug("Number of directories to have backed up is equal to the backup count.");
+        try (Stream<Path> dirStream = Files.list(backupPath.getParent())) {
+          Optional<Path> optionalOldest = dirStream
+            .filter(Files::isDirectory)
+            .min(Comparator.comparingLong(target -> {
+              try {
+                return Files.readAttributes(target, BasicFileAttributes.class).creationTime()
+                  .toMillis();
+              } catch (IOException e) {
+                return Long.MAX_VALUE;
+              }
+            }));
+          optionalOldest.ifPresent(oldest -> {
+            try {
+              deleteContent(oldest);
+              Files.deleteIfExists(oldest);
+            } catch (IOException e) {
+              log.error("Failed to delete directory: {}", oldest, e);
+            }
+          });
+        }
+      }
+    }
+    Files.createDirectory(backupPath);
+    try (Stream<Path> stream = Files.walk(p)) {
+      stream.forEach(source -> {
+        Path target = backupPath.resolve(p.relativize(source));
+        try {
+          Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+          log.error("Failed to copy file: {}", source, e);
+        }
+      });
+    }
+    log.info("Backup process completed.");
   }
 
   @FXML
