@@ -277,7 +277,6 @@ public class MainController {
 
   @FXML
   void onSelectBackupSavingFolderBtnClick() {
-    runConcurrentTask(es, () -> {
       DirectoryChooser dc = new DirectoryChooser();
       dc.setTitle("バックアップを保存するフォルダを選択してください。");
       dc.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -289,12 +288,10 @@ public class MainController {
       }
       log.debug("Got the folder: {}", f.getAbsolutePath());
       backupSavingFolderPathField.setText(f.getAbsolutePath());
-    });
   }
 
   @FXML
   void onSelectLauncherExeBtnClick() {
-    runConcurrentTask(es, () -> {
       FileChooser fc = new FileChooser();
       fc.setTitle("ランチャーの実行ファイルを選択してください。");
       fc.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -306,12 +303,10 @@ public class MainController {
       }
       log.debug("Got the file: {}", f.getAbsolutePath());
       launcherExePathField.setText(f.getAbsolutePath());
-    });
   }
 
   @FXML
   void onSelectSavesFolderBtnClick() {
-    runConcurrentTask(es, () -> {
       DirectoryChooser dc = new DirectoryChooser();
       dc.setTitle("\".minecraft/saves\"フォルダを選択してください。");
       dc.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -323,7 +318,6 @@ public class MainController {
       }
       log.debug("Got the folder: {}", f.getAbsolutePath());
       savesFolderPathField.setText(f.getAbsolutePath());
-    });
   }
 
   @FXML
