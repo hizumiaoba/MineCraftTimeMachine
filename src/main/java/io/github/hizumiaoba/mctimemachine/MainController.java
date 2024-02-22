@@ -19,6 +19,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -153,18 +154,31 @@ public class MainController {
 
   @FXML
   void onBackupNowBtnClick() {
-    checkPath();
-    this.backupUtils.createBackupDir();
-    try {
-      this.backupUtils.backup(Paths.get(
-          savesFolderPathField.getText()),
-        false,
-        backupCountSpinner.getValue());
-    } catch (IOException e) {
-      ExceptionPopup popup = new ExceptionPopup(e, "バックアップを作成できませんでした。",
-        "MainController#onBackupNowBtnClick()$lambda");
-      popup.pop();
-    }
+
+    es.submit(() -> {
+      Platform.runLater(() -> {
+        backupNowBtn.setStyle(
+          "-fx-text-fill: #ff0000; -fx-font-weight: bold;"
+        );
+        backupNowBtn.setText("バックアップ中…");
+      });
+      checkPath();
+      this.backupUtils.createBackupDir();
+      try {
+        this.backupUtils.backup(Paths.get(
+            savesFolderPathField.getText()),
+          false,
+          backupCountSpinner.getValue());
+      } catch (IOException e) {
+        ExceptionPopup popup = new ExceptionPopup(e, "バックアップを作成できませんでした。",
+          "MainController#onBackupNowBtnClick()$lambda");
+        popup.pop();
+      }
+      Platform.runLater(() -> {
+        backupNowBtn.setStyle("");
+        backupNowBtn.setText("いますぐバックアップ");
+      });
+    });
   }
 
   @FXML
