@@ -241,6 +241,7 @@ public class MainController {
             }));
           optionalOldest.ifPresent(oldest -> {
             try {
+              log.info("Deleted the oldest backup directory: {}", oldest);
               deleteContent(oldest);
               Files.deleteIfExists(oldest);
             } catch (IOException e) {
