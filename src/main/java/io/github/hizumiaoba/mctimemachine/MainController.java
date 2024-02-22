@@ -6,6 +6,7 @@ import io.github.hizumiaoba.mctimemachine.internal.ApplicationConfig;
 import io.github.hizumiaoba.mctimemachine.internal.concurrent.ConcurrentThreadFactory;
 import io.github.hizumiaoba.mctimemachine.internal.fs.BackupUtils;
 import java.awt.Desktop;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -26,6 +27,8 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -153,8 +156,7 @@ public class MainController {
 
   @FXML
   void onBackupNowBtnClick() {
-
-    es.submit(() -> {
+    runConcurrentTask(es, () -> {
       Platform.runLater(() -> {
         backupNowBtn.setStyle(
           "-fx-text-fill: #ff0000; -fx-font-weight: bold;"
@@ -186,28 +188,34 @@ public class MainController {
 
   @FXML
   void onBackupScheduledBtnClick() {
-    checkPath();
-    this.backupUtils.createBackupDir();
-    if (backupScheduledFuture == null) {
-      log.trace("Guessed that the backup scheduler is not running.");
-      backupScheduledFuture = backupSchedulerExecutors.scheduleAtFixedRate(
-        () -> {
-          log.trace("Backup scheduler is running.");
-          onBackupNowBtnClick();
-        }, 0,
-        backupScheduleDurationSpinner.getValue(), TimeUnit.MINUTES);
-      backupScheduledBtn.setText("定期バックアップ中！");
-      backupScheduledBtn.setStyle(
-        "-fx-background-color: #ff0000; -fx-text-fill: #fff; -fx-font-weight: bold;");
-    } else {
-      log.trace("Guessed that the backup scheduler is running.");
-      if (backupScheduledFuture.cancel(false)) {
-        log.debug("Backup scheduler could be canceled.");
+    runConcurrentTask(es, () -> {
+      checkPath();
+      this.backupUtils.createBackupDir();
+      if (backupScheduledFuture == null) {
+        log.trace("Guessed that the backup scheduler is not running.");
+        backupScheduledFuture = backupSchedulerExecutors.scheduleAtFixedRate(
+          () -> {
+            log.trace("Backup scheduler is running.");
+            onBackupNowBtnClick();
+          }, 0,
+          backupScheduleDurationSpinner.getValue(), TimeUnit.MINUTES);
+        Platform.runLater(() -> {
+          backupScheduledBtn.setText("定期バックアップ中！");
+          backupScheduledBtn.setStyle(
+            "-fx-background-color: #ff0000; -fx-text-fill: #fff; -fx-font-weight: bold;");
+        });
+      } else {
+        log.trace("Guessed that the backup scheduler is running.");
+        if (backupScheduledFuture.cancel(false)) {
+          log.debug("Backup scheduler could be canceled.");
+        }
+        Platform.runLater(() -> {
+          backupScheduledBtn.setStyle("");
+          backupScheduledBtn.setText("定期バックアップ開始");
+        });
+        backupScheduledFuture = null;
       }
-      backupScheduledBtn.setStyle("");
-      backupScheduledBtn.setText("定期バックアップ開始");
-      backupScheduledFuture = null;
-    }
+    });
   }
 
   @FXML
@@ -217,7 +225,16 @@ public class MainController {
 
   @FXML
   void onOpenBackupSavingFolderBtnClick() {
-    System.out.println("Open Backup Saving Folder button clicked");
+    runConcurrentTask(es, () -> {
+      try {
+        log.debug("Opening the backup saving folder.");
+        Desktop.getDesktop().open(Paths.get(backupSavingFolderPathField.getText()).toFile());
+      } catch (IOException e) {
+        ExceptionPopup popup = new ExceptionPopup(e, "フォルダを開けませんでした。",
+          "MainController#onOpenBackupSavingFolderBtnClick()$lambda");
+        popup.pop();
+      }
+    });
   }
 
   @FXML
@@ -227,7 +244,7 @@ public class MainController {
 
   @FXML
   void onOpenLauncherBtnClick() {
-    es.execute(() -> {
+    runConcurrentTask(es, () -> {
       log.trace("create external process to open the launcher.");
       log.trace("launcher path: {}", launcherExePathField.getText());
       try {
@@ -246,27 +263,72 @@ public class MainController {
 
   @FXML
   void onOpenSavesFolderBtnClick() {
-    System.out.println("Open Saves Folder button clicked");
+    runConcurrentTask(es, () -> {
+      try {
+        log.debug("Opening the saves folder.");
+        Desktop.getDesktop().open(Paths.get(savesFolderPathField.getText()).toFile());
+      } catch (IOException e) {
+        ExceptionPopup popup = new ExceptionPopup(e, "フォルダを開けませんでした。",
+          "MainController#onOpenSavesFolderBtnClick()$lambda");
+        popup.pop();
+      }
+    });
   }
 
   @FXML
   void onSelectBackupSavingFolderBtnClick() {
-    System.out.println("Select Backup Saving Folder button clicked");
+    runConcurrentTask(es, () -> {
+      DirectoryChooser dc = new DirectoryChooser();
+      dc.setTitle("バックアップを保存するフォルダを選択してください。");
+      dc.setInitialDirectory(new File(System.getProperty("user.home")));
+      log.debug("awaiting for the user to select the backup saving folder.");
+      File f = dc.showDialog(null);
+      if (f == null) {
+        log.debug("Got nothing.");
+        return;
+      }
+      log.debug("Got the folder: {}", f.getAbsolutePath());
+      backupSavingFolderPathField.setText(f.getAbsolutePath());
+    });
   }
 
   @FXML
   void onSelectLauncherExeBtnClick() {
-    System.out.println("Select Launcher Exe button clicked");
+    runConcurrentTask(es, () -> {
+      FileChooser fc = new FileChooser();
+      fc.setTitle("ランチャーの実行ファイルを選択してください。");
+      fc.setInitialDirectory(new File(System.getProperty("user.home")));
+      log.debug("awaiting for the user to select the executable file.");
+      File f = fc.showOpenDialog(null);
+      if (f == null) {
+        log.debug("Got nothing.");
+        return;
+      }
+      log.debug("Got the file: {}", f.getAbsolutePath());
+      launcherExePathField.setText(f.getAbsolutePath());
+    });
   }
 
   @FXML
   void onSelectSavesFolderBtnClick() {
-    System.out.println("Select Saves Folder button clicked");
+    runConcurrentTask(es, () -> {
+      DirectoryChooser dc = new DirectoryChooser();
+      dc.setTitle("\".minecraft/saves\"フォルダを選択してください。");
+      dc.setInitialDirectory(new File(System.getProperty("user.home")));
+      log.debug("awaiting for the user to select the saves folder.");
+      File f = dc.showDialog(null);
+      if (f == null) {
+        log.debug("Got nothing.");
+        return;
+      }
+      log.debug("Got the folder: {}", f.getAbsolutePath());
+      savesFolderPathField.setText(f.getAbsolutePath());
+    });
   }
 
   @FXML
   void onSendFeedbackBtnClick() {
-    es.execute(() -> {
+    runConcurrentTask(es, () -> {
       log.trace("Opening browser to access the git repository.");
       try {
         Desktop.getDesktop().browse(URI.create("https://github.com/hizumiaoba/MineCraftTimeMachine/issues"));
@@ -279,7 +341,7 @@ public class MainController {
 
   @FXML
   void onSpecialBackupNowBtnClick() {
-    es.execute(() -> {
+    runConcurrentTask(es, () -> {
       Platform.runLater(() -> {
         specialBackupNowBtn.setStyle(
           "-fx-text-fill: #ff0000; -fx-font-weight: bold;"
@@ -309,5 +371,9 @@ public class MainController {
       });
       log.info("Special backup completed.");
     });
+  }
+
+  private void runConcurrentTask(ExecutorService service, Runnable task) {
+    service.execute(task);
   }
 }
