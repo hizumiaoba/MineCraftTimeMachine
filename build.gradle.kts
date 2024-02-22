@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "io.github.hizumiaoba"
-version = "1.0-SNAPSHOT"
+version = "1.0.0"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -78,4 +78,9 @@ tasks.jlinkZip {
 
 kotlin {
     jvmToolchain(17)
+}
+
+tasks.findByName("buildScan")?.withGroovyBuilder {
+    setProperty("termsOfServiceUrl", "https://gradle.com/terms-of-service")
+    setProperty("termsOfServiceAgree", "yes")
 }
