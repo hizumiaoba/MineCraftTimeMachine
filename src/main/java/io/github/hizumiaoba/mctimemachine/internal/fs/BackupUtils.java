@@ -40,7 +40,7 @@ public class BackupUtils {
   }
 
   public void backup(Path savesDirPath, boolean isSpecial, long maxBackupCount) throws IOException {
-    if (didReachMaxBackupCount(maxBackupCount)) {
+    if (!isSpecial && didReachMaxBackupCount(maxBackupCount)) {
       log.info("Reached maximum backup count. Deleting the oldest backup...");
       getOldestBackupDir().ifPresent(p -> {
         try {
@@ -50,8 +50,8 @@ public class BackupUtils {
           log.error("Failed to delete the oldest backup: {}", p, e);
         }
       });
-      createBackup(savesDirPath, isSpecial);
     }
+      createBackup(savesDirPath, isSpecial);
   }
 
   private void createBackup(Path savesDirPath, boolean isSpecial) throws IOException {
@@ -77,7 +77,9 @@ public class BackupUtils {
     try (var stream = Files.list(this.backupPath)) {
       return stream
         .filter(Files::isDirectory)
-        .filter(p -> !p.getFileName().startsWith("Sp"))
+        .map(Path::getFileName)
+        .map(Path::toString)
+        .filter(p -> !p.startsWith("Sp"))
         .count();
     }
   }
@@ -102,7 +104,7 @@ public class BackupUtils {
     try (var stream = Files.list(this.backupPath)) {
       return stream
         .filter(Files::isDirectory)
-        .filter(p -> !p.getFileName().startsWith("Sp"))
+        .filter(p -> !p.getFileName().toString().startsWith("Sp"))
         .min((p1, p2) -> {
           try {
             return Files.getLastModifiedTime(p1).compareTo(Files.getLastModifiedTime(p2));
