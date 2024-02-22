@@ -4,20 +4,13 @@ import io.github.hizumiaoba.mctimemachine.api.Config;
 import io.github.hizumiaoba.mctimemachine.api.ExceptionPopup;
 import io.github.hizumiaoba.mctimemachine.internal.ApplicationConfig;
 import io.github.hizumiaoba.mctimemachine.internal.concurrent.ConcurrentThreadFactory;
+import io.github.hizumiaoba.mctimemachine.internal.fs.BackupUtils;
 import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -26,7 +19,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -116,6 +108,7 @@ public class MainController {
   private static final ScheduledExecutorService backupSchedulerExecutors;
   private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
   private static ScheduledFuture<?> backupScheduledFuture;
+  private BackupUtils backupUtils;
 
   static {
     es = Executors.newCachedThreadPool(new ConcurrentThreadFactory("Main GUI", "Controller", true));
@@ -145,27 +138,26 @@ public class MainController {
     backupScheduleDurationSpinner.setValueFactory(new IntegerSpinnerValueFactory(1, 2000, 1));
     backupCountSpinner.getValueFactory().setValue(Integer.parseInt(mainConfig.load("backup_count")));
     backupScheduleDurationSpinner.getValueFactory().setValue(Integer.parseInt(mainConfig.load("backup_schedule_duration")));
+    backupUtils = new BackupUtils(backupSavingFolderPathField.getText());
   }
 
-  private void createBackupDirs() {
-    es.execute(() -> {
-      log.debug("Checking backup directories.");
-      try {
-        Files.createDirectories(Path.of(backupSavingFolderPathField.getText()));
-      } catch (IOException e) {
-        ExceptionPopup popup = new ExceptionPopup(e,
-          "バックアップ保存フォルダを作成できませんでした。", "MainController#initialize()$lambda");
-        popup.pop();
-      }
-      log.debug("Backup directories are ready.");
-    });
+  private void checkPath() {
+    if (!this.backupUtils.getBackupPath()
+      .equals(Paths.get(this.backupSavingFolderPathField.getText()))) {
+      log.debug("Backup path has been changed.");
+      this.backupUtils.setBackupPath(this.backupSavingFolderPathField.getText());
+    }
   }
 
   @FXML
   void onBackupNowBtnClick() {
-    createBackupDirs();
+    checkPath();
+    this.backupUtils.createBackupDir();
     try {
-      createBackupRecursively(Paths.get(savesFolderPathField.getText()));
+      this.backupUtils.backup(Paths.get(
+          savesFolderPathField.getText()),
+        false,
+        backupCountSpinner.getValue());
     } catch (IOException e) {
       ExceptionPopup popup = new ExceptionPopup(e, "バックアップを作成できませんでした。",
         "MainController#onBackupNowBtnClick()$lambda");
@@ -175,15 +167,19 @@ public class MainController {
 
   @FXML
   void onBackupScheduledBtnClick() {
-    createBackupDirs();
-    System.out.println("Backup Scheduled button clicked");
+    checkPath();
+    this.backupUtils.createBackupDir();
     if (backupScheduledFuture == null) {
       log.trace("Guessed that the backup scheduler is not running.");
       backupScheduledFuture = backupSchedulerExecutors.scheduleAtFixedRate(
         () -> {
           log.trace("Backup scheduler is running.");
           try {
-            createBackupRecursively(Paths.get(savesFolderPathField.getText()));
+            this.backupUtils.backup(
+              Paths.get(savesFolderPathField.getText()),
+              false,
+              backupCountSpinner.getValue()
+            );
           } catch (IOException e) {
             ExceptionPopup popup = new ExceptionPopup(e,
               "定期バックアップ用のバックアップフォルダを作成できませんでした。",
@@ -204,65 +200,6 @@ public class MainController {
       backupScheduledBtn.setText("定期バックアップ開始");
       backupScheduledFuture = null;
     }
-  }
-
-  private void deleteContent(Path p) {
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(p)) {
-      for (Path target : stream) {
-        if (Files.isDirectory(target)) {
-          deleteContent(target);
-        }
-        Files.deleteIfExists(target);
-      }
-    } catch (IOException e) {
-      log.error("Failed to delete content of directory: {}", p, e);
-    }
-  }
-
-  private void createBackupRecursively(Path p) throws IOException {
-    log.info("Commencing backup process.");
-    Path backupPath = Paths.get(
-      String.format("%s/%s", backupSavingFolderPathField.getText(), sdf.format(new Date())));
-    try (Stream<Path> stream = Files.list(backupPath.getParent())) {
-      long count = stream.filter(Files::isDirectory).filter(d -> !d.startsWith("Sp")).count();
-      log.debug("Number of directories to have backed up: {}", count);
-      if (count == backupCountSpinner.getValue()) {
-        log.debug("Number of directories to have backed up is equal to the backup count.");
-        try (Stream<Path> dirStream = Files.list(backupPath.getParent())) {
-          Optional<Path> optionalOldest = dirStream
-            .filter(Files::isDirectory)
-            .min(Comparator.comparingLong(target -> {
-              try {
-                return Files.readAttributes(target, BasicFileAttributes.class).creationTime()
-                  .toMillis();
-              } catch (IOException e) {
-                return Long.MAX_VALUE;
-              }
-            }));
-          optionalOldest.ifPresent(oldest -> {
-            try {
-              log.info("Deleted the oldest backup directory: {}", oldest);
-              deleteContent(oldest);
-              Files.deleteIfExists(oldest);
-            } catch (IOException e) {
-              log.error("Failed to delete directory: {}", oldest, e);
-            }
-          });
-        }
-      }
-    }
-    Files.createDirectory(backupPath);
-    try (Stream<Path> stream = Files.walk(p)) {
-      stream.forEach(source -> {
-        Path target = backupPath.resolve(p.relativize(source));
-        try {
-          Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-          log.error("Failed to copy file: {}", source, e);
-        }
-      });
-    }
-    log.info("Backup process completed.");
   }
 
   @FXML
@@ -334,6 +271,19 @@ public class MainController {
 
   @FXML
   void onSpecialBackupNowBtnClick() {
-    System.out.println("Special Backup Now button clicked");
+    checkPath();
+    this.backupUtils.createBackupDir();
+    log.info("Starting special backup...");
+    try {
+      this.backupUtils.backup(
+        Paths.get(savesFolderPathField.getText()),
+        true,
+        backupCountSpinner.getValue());
+    } catch (IOException e) {
+      ExceptionPopup popup = new ExceptionPopup(e, "特殊バックアップを作成できませんでした。",
+        "MainController#onSpecialBackupNowBtnClick()$lambda");
+      popup.pop();
+    }
+    log.info("Special backup completed.");
   }
 }
