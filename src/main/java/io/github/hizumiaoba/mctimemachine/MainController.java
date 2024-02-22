@@ -26,6 +26,7 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -108,6 +109,7 @@ public class MainController {
   private static final ScheduledExecutorService backupSchedulerExecutors;
   private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
   private static ScheduledFuture<?> backupScheduledFuture;
+  @Getter
   private BackupUtils backupUtils;
 
   static {
@@ -174,18 +176,7 @@ public class MainController {
       backupScheduledFuture = backupSchedulerExecutors.scheduleAtFixedRate(
         () -> {
           log.trace("Backup scheduler is running.");
-          try {
-            this.backupUtils.backup(
-              Paths.get(savesFolderPathField.getText()),
-              false,
-              backupCountSpinner.getValue()
-            );
-          } catch (IOException e) {
-            ExceptionPopup popup = new ExceptionPopup(e,
-              "定期バックアップ用のバックアップフォルダを作成できませんでした。",
-              "MainController#onBackupScheduledBtnClick()$lambda");
-            popup.pop();
-          }
+          onBackupNowBtnClick();
         }, 0,
         backupScheduleDurationSpinner.getValue(), TimeUnit.MINUTES);
       backupScheduledBtn.setText("定期バックアップ中！");
