@@ -321,7 +321,7 @@ public class MainController {
 
   @FXML
   void onSendFeedbackBtnClick() {
-    CompletableFuture.runAsync(() -> {
+    es.execute(() -> {
       log.trace("Opening browser to access the git repository.");
       try {
         Desktop.getDesktop().browse(URI.create("https://github.com/hizumiaoba/MineCraftTimeMachine/issues"));
@@ -329,7 +329,7 @@ public class MainController {
         ExceptionPopup popup = new ExceptionPopup(e, "ブラウザを開けませんでした。", "MainController#onSendFeedbackBtnClick()$lambda");
         popup.pop();
       }
-    }, es);
+    });
   }
 
   @FXML
