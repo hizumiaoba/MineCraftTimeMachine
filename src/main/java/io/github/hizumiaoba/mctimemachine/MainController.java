@@ -12,7 +12,6 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ResourceBundle;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -161,6 +160,8 @@ public class MainController {
           "-fx-text-fill: #ff0000; -fx-font-weight: bold;"
         );
         backupNowBtn.setText("バックアップ中…");
+        backupNowWithShortcutChkbox.setDisable(true);
+        specialBackupNowWithShortcutChkbox.setDisable(true);
       });
       checkPath();
       this.backupUtils.createBackupDir();
@@ -177,6 +178,8 @@ public class MainController {
       Platform.runLater(() -> {
         backupNowBtn.setStyle("");
         backupNowBtn.setText("いますぐバックアップ");
+        backupNowWithShortcutChkbox.setDisable(false);
+        specialBackupNowWithShortcutChkbox.setDisable(false);
       });
     });
   }
@@ -224,7 +227,7 @@ public class MainController {
 
   @FXML
   void onOpenLauncherBtnClick() {
-    CompletableFuture.runAsync(() -> {
+    es.execute(() -> {
       log.trace("create external process to open the launcher.");
       log.trace("launcher path: {}", launcherExePathField.getText());
       try {
@@ -233,7 +236,7 @@ public class MainController {
         ExceptionPopup popup = new ExceptionPopup(e, "外部プロセスを開始できませんでした。", "MainController#onOpenLauncherBtnClick()$lambda");
         popup.pop();
       }
-    }, es);
+    });
   }
 
   @FXML
@@ -276,19 +279,35 @@ public class MainController {
 
   @FXML
   void onSpecialBackupNowBtnClick() {
-    checkPath();
-    this.backupUtils.createBackupDir();
-    log.info("Starting special backup...");
-    try {
-      this.backupUtils.backup(
-        Paths.get(savesFolderPathField.getText()),
-        true,
-        backupCountSpinner.getValue());
-    } catch (IOException e) {
-      ExceptionPopup popup = new ExceptionPopup(e, "特殊バックアップを作成できませんでした。",
-        "MainController#onSpecialBackupNowBtnClick()$lambda");
-      popup.pop();
-    }
-    log.info("Special backup completed.");
+    es.execute(() -> {
+      Platform.runLater(() -> {
+        specialBackupNowBtn.setStyle(
+          "-fx-text-fill: #ff0000; -fx-font-weight: bold;"
+        );
+        specialBackupNowBtn.setText("特殊バックアップ中…");
+        backupNowWithShortcutChkbox.setDisable(true);
+        specialBackupNowWithShortcutChkbox.setDisable(true);
+      });
+      checkPath();
+      this.backupUtils.createBackupDir();
+      log.info("Starting special backup...");
+      try {
+        this.backupUtils.backup(
+          Paths.get(savesFolderPathField.getText()),
+          true,
+          backupCountSpinner.getValue());
+      } catch (IOException e) {
+        ExceptionPopup popup = new ExceptionPopup(e, "特殊バックアップを作成できませんでした。",
+          "MainController#onSpecialBackupNowBtnClick()$lambda");
+        popup.pop();
+      }
+      Platform.runLater(() -> {
+        specialBackupNowBtn.setStyle("");
+        specialBackupNowBtn.setText("いますぐ特殊バックアップ");
+        backupNowWithShortcutChkbox.setDisable(false);
+        specialBackupNowWithShortcutChkbox.setDisable(false);
+      });
+      log.info("Special backup completed.");
+    });
   }
 }
