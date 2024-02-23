@@ -1,7 +1,7 @@
 plugins {
     java
     application
-    id("org.javamodularity.moduleplugin") version "1.8.12"
+    id("org.javamodularity.moduleplugin") version "1.8.14"
     id("org.openjfx.javafxplugin") version "0.0.13"
     id("org.beryx.jlink") version "2.25.0"
     id("org.jetbrains.kotlin.jvm")
