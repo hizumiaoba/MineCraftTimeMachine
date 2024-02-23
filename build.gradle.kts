@@ -1,9 +1,9 @@
 plugins {
     java
     application
-    id("org.javamodularity.moduleplugin") version "1.8.12"
-    id("org.openjfx.javafxplugin") version "0.0.13"
     id("org.beryx.jlink") version "3.0.1"
+    id("org.openjfx.javafxplugin") version "0.1.0"
+    id("org.javamodularity.moduleplugin") version "1.8.14"
     id("org.jetbrains.kotlin.jvm")
 }
 
@@ -42,7 +42,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     implementation("ch.qos.logback:logback-classic:1.4.14")
-    implementation("com.google.guava:guava:32.1.3-jre")
+    implementation("com.google.guava:guava:33.0.0-jre")
     // https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
     implementation("org.xerial:sqlite-jdbc:3.45.1.0")
     implementation("org.projectlombok:lombok:${lombokVersion}")
