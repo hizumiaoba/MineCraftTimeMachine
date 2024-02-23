@@ -68,7 +68,7 @@ jlink {
     imageZip.set(project.file("${buildDir}/distributions/app-${javafx.platform.classifier}.zip"))
     options.set(mutableListOf("--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"))
     launcher {
-        name = "app"
+        name = "MinecraftTimeMachine"
     }
 }
 
@@ -80,7 +80,7 @@ kotlin {
     jvmToolchain(17)
 }
 
-tasks.findByName("buildScan")?.withGroovyBuilder {
+extensions.findByName("buildScan")?.withGroovyBuilder {
     setProperty("termsOfServiceUrl", "https://gradle.com/terms-of-service")
     setProperty("termsOfServiceAgree", "yes")
 }
