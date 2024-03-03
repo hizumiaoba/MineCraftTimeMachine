@@ -9,7 +9,6 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -28,7 +27,9 @@ public class ApplicationConfig implements Config {
       "backup_saving_folder_path", "path\\to\\your\\backup\\folder",
       "launcher_exe_path", "C:\\XboxGames\\Minecraft Launcher\\Content\\Minecraft.exe",
       "backup_schedule_duration", "20",
-      "backup_count", "5"
+      "backup_count", "5",
+      "normal_backup_on_shortcut", "true",
+      "special_backup_on_shortcut", "true"
     );
   }
 

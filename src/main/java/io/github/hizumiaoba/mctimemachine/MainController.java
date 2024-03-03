@@ -1,10 +1,14 @@
 package io.github.hizumiaoba.mctimemachine;
 
+import com.github.kwhat.jnativehook.GlobalScreen;
 import io.github.hizumiaoba.mctimemachine.api.Config;
 import io.github.hizumiaoba.mctimemachine.api.ExceptionPopup;
 import io.github.hizumiaoba.mctimemachine.internal.ApplicationConfig;
 import io.github.hizumiaoba.mctimemachine.internal.concurrent.ConcurrentThreadFactory;
 import io.github.hizumiaoba.mctimemachine.internal.fs.BackupUtils;
+import io.github.hizumiaoba.mctimemachine.internal.keyhook.GlobalNativeKeyListenerExecutor;
+import io.github.hizumiaoba.mctimemachine.internal.listener.NormalBackupKeyShortcutListener;
+import io.github.hizumiaoba.mctimemachine.internal.listener.SpecialBackupKeyShortcutListener;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
@@ -131,10 +135,36 @@ public class MainController {
       mainConfig.set("launcher_exe_path", launcherExePathField.getText());
       mainConfig.set("backup_count", backupCountSpinner.getValue().toString());
       mainConfig.set("backup_schedule_duration", backupScheduleDurationSpinner.getValue().toString());
+      mainConfig.set("normal_backup_on_shortcut",
+        backupNowWithShortcutChkbox.isSelected() ? "true" : "false");
+      mainConfig.set("special_backup_on_shortcut",
+        specialBackupNowWithShortcutChkbox.isSelected() ? "true" : "false");
       mainConfig.save();
       es.shutdownNow();
       backupSchedulerExecutors.shutdownNow();
     }));
+
+    GlobalNativeKeyListenerExecutor globalNativeKeyListenerExecutor = new GlobalNativeKeyListenerExecutor(
+      new NormalBackupKeyShortcutListener(() -> {
+        if (this.backupNowWithShortcutChkbox.isSelected()) {
+          onBackupNowBtnClick();
+        }
+      }),
+      new SpecialBackupKeyShortcutListener(() -> {
+        if (this.specialBackupNowWithShortcutChkbox.isSelected()) {
+          onSpecialBackupNowBtnClick();
+        }
+      })
+    );
+
+    try {
+      GlobalScreen.registerNativeHook();
+      GlobalScreen.addNativeKeyListener(globalNativeKeyListenerExecutor);
+    } catch (Exception e) {
+      ExceptionPopup popup = new ExceptionPopup(e, "ショートカットフックを登録できませんでした。",
+        "MainController#initialize()$lambda");
+      popup.pop();
+    }
 
     savesFolderPathField.setText(mainConfig.load("saves_folder_path"));
     backupSavingFolderPathField.setText(mainConfig.load("backup_saving_folder_path"));
@@ -143,6 +173,10 @@ public class MainController {
     backupScheduleDurationSpinner.setValueFactory(new IntegerSpinnerValueFactory(1, 2000, 1));
     backupCountSpinner.getValueFactory().setValue(Integer.parseInt(mainConfig.load("backup_count")));
     backupScheduleDurationSpinner.getValueFactory().setValue(Integer.parseInt(mainConfig.load("backup_schedule_duration")));
+    backupNowWithShortcutChkbox.setSelected(
+      Boolean.parseBoolean(mainConfig.load("normal_backup_on_shortcut")));
+    specialBackupNowWithShortcutChkbox.setSelected(
+      Boolean.parseBoolean(mainConfig.load("special_backup_on_shortcut")));
     backupUtils = new BackupUtils(backupSavingFolderPathField.getText());
   }
 
