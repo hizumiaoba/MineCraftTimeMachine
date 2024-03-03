@@ -135,6 +135,10 @@ public class MainController {
       mainConfig.set("launcher_exe_path", launcherExePathField.getText());
       mainConfig.set("backup_count", backupCountSpinner.getValue().toString());
       mainConfig.set("backup_schedule_duration", backupScheduleDurationSpinner.getValue().toString());
+      mainConfig.set("normal_backup_on_shortcut",
+        backupNowWithShortcutChkbox.isSelected() ? "true" : "false");
+      mainConfig.set("special_backup_on_shortcut",
+        specialBackupNowWithShortcutChkbox.isSelected() ? "true" : "false");
       mainConfig.save();
       es.shutdownNow();
       backupSchedulerExecutors.shutdownNow();
@@ -169,6 +173,10 @@ public class MainController {
     backupScheduleDurationSpinner.setValueFactory(new IntegerSpinnerValueFactory(1, 2000, 1));
     backupCountSpinner.getValueFactory().setValue(Integer.parseInt(mainConfig.load("backup_count")));
     backupScheduleDurationSpinner.getValueFactory().setValue(Integer.parseInt(mainConfig.load("backup_schedule_duration")));
+    backupNowWithShortcutChkbox.setSelected(
+      Boolean.parseBoolean(mainConfig.load("normal_backup_on_shortcut")));
+    specialBackupNowWithShortcutChkbox.setSelected(
+      Boolean.parseBoolean(mainConfig.load("special_backup_on_shortcut")));
     backupUtils = new BackupUtils(backupSavingFolderPathField.getText());
   }
 
