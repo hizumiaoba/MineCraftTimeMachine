@@ -1,0 +1,56 @@
+name: 不具合レポート
+description: ソフトウェアを使用中に遭遇した、予期しない挙動などを報告できます。
+title: "[BUG]: "
+labels: [ "bug", "need triage" ]
+assignees: [ "hizumiaoba" ]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        この度は不具合報告にご協力いただき、ありがとうございます。以下の情報をご記入ください。
+  - type: input
+    id: contact
+    attributes:
+      label: 連絡先
+      description: さらに追加の連絡を必要とする場合は、こちらに連絡先情報をご記入ください。
+      placeholder: 連絡先をご記入ください。
+    validations:
+      required: false
+  - type: dropdown
+    id: category
+    attributes:
+      label: 不具合が発生した箇所
+      description: 不具合が発生した箇所を選択してください。該当項目がない場合は、その他を選択してください。
+      options:
+        - GUIの表示
+        - 通常バックアップ処理（定期バックアップを含む）
+        - 特殊バックアップ処理
+        - ソフトウェア設定（バックアップ先フォルダ指定など）
+        - キーボードショートカット機能
+        - その他
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: 不具合の詳細
+      description: 不具合の詳細をご記入ください。再現手順や、発生した環境などを含めてご記入ください。
+      placeholder: 不具合の詳細をご記入ください。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待される挙動
+      description: 期待される挙動をご記入ください。
+      placeholder: 期待される挙動をご記入ください。
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 関連するエラーダイアログ
+      description: 関連するエラーダイアログの内容をご記入ください。ログファイル添付も可能です。
+      placeholder: 関連するエラーダイアログの内容をご記入ください。ログファイルの場合はドラッグ＆ドロップしてください。
+    validations:
+      required: false
