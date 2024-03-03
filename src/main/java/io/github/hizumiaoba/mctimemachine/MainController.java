@@ -1,10 +1,14 @@
 package io.github.hizumiaoba.mctimemachine;
 
+import com.github.kwhat.jnativehook.GlobalScreen;
 import io.github.hizumiaoba.mctimemachine.api.Config;
 import io.github.hizumiaoba.mctimemachine.api.ExceptionPopup;
 import io.github.hizumiaoba.mctimemachine.internal.ApplicationConfig;
 import io.github.hizumiaoba.mctimemachine.internal.concurrent.ConcurrentThreadFactory;
 import io.github.hizumiaoba.mctimemachine.internal.fs.BackupUtils;
+import io.github.hizumiaoba.mctimemachine.internal.keyhook.GlobalNativeKeyListenerExecutor;
+import io.github.hizumiaoba.mctimemachine.internal.listener.NormalBackupKeyShortcutListener;
+import io.github.hizumiaoba.mctimemachine.internal.listener.SpecialBackupKeyShortcutListener;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
@@ -135,6 +139,28 @@ public class MainController {
       es.shutdownNow();
       backupSchedulerExecutors.shutdownNow();
     }));
+
+    GlobalNativeKeyListenerExecutor globalNativeKeyListenerExecutor = new GlobalNativeKeyListenerExecutor(
+      new NormalBackupKeyShortcutListener(() -> {
+        if (this.backupNowWithShortcutChkbox.isSelected()) {
+          onBackupNowBtnClick();
+        }
+      }),
+      new SpecialBackupKeyShortcutListener(() -> {
+        if (this.specialBackupNowWithShortcutChkbox.isSelected()) {
+          onSpecialBackupNowBtnClick();
+        }
+      })
+    );
+
+    try {
+      GlobalScreen.registerNativeHook();
+      GlobalScreen.addNativeKeyListener(globalNativeKeyListenerExecutor);
+    } catch (Exception e) {
+      ExceptionPopup popup = new ExceptionPopup(e, "ショートカットフックを登録できませんでした。",
+        "MainController#initialize()$lambda");
+      popup.pop();
+    }
 
     savesFolderPathField.setText(mainConfig.load("saves_folder_path"));
     backupSavingFolderPathField.setText(mainConfig.load("backup_saving_folder_path"));
