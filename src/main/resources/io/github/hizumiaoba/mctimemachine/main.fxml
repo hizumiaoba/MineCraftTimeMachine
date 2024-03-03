@@ -44,7 +44,10 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-<TabPane fx:id="mainTabPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="190.0" prefWidth="920.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.hizumiaoba.mctimemachine.MainController">
+<TabPane xmlns:fx="http://javafx.com/fxml/1" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
+  minWidth="-Infinity" prefHeight="190.0" prefWidth="920.0" tabClosingPolicy="UNAVAILABLE"
+  xmlns="http://javafx.com/javafx/17.0.2-ea" fx:controller="io.github.hizumiaoba.mctimemachine.MainController"
+  fx:id="mainTabPane">
   <tabs>
     <Tab text="メインツール">
       <content>
@@ -57,21 +60,20 @@
                               <Button fx:id="backupNowBtn" mnemonicParsing="false" onAction="#onBackupNowBtnClick" prefHeight="40.0" prefWidth="170.0" text="いますぐバックアップ" />
                               <Button fx:id="backupScheduledBtn" layoutX="385.0" layoutY="20.0" mnemonicParsing="false" onAction="#onBackupScheduledBtnClick" prefHeight="40.0" prefWidth="170.0" text="定期バックアップ開始" />
                               <Button fx:id="specialBackupNowBtn" layoutX="475.0" layoutY="20.0" mnemonicParsing="false" onAction="#onSpecialBackupNowBtnClick" prefHeight="40.0" prefWidth="170.0" text="いますぐ特殊バックアップ" />
-                             <Button disable="true" layoutX="565.0" layoutY="20.0"
-                               mnemonicParsing="false" onAction="#onOpenBackupListBtnClick"
-                               prefHeight="40.0" prefWidth="170.0"
-                               text="バックアップリスト" fx:id="openBackupListBtn"/>
+                              <Button disable="true" layoutX="565.0" layoutY="20.0"
+                                mnemonicParsing="false" onAction="#onOpenBackupListBtnClick"
+                                prefHeight="40.0" prefWidth="170.0"
+                                text="バックアップリスト" fx:id="openBackupListBtn"/>
                               <Button fx:id="openLauncherBtn" layoutX="655.0" layoutY="20.0" mnemonicParsing="false" onAction="#onOpenLauncherBtnClick" prefHeight="40.0" prefWidth="170.0" text="ランチャー起動" />
                            </children>
                         </HBox>
                         <HBox alignment="CENTER_LEFT" prefHeight="40.0" prefWidth="920.0" spacing="30.0">
                            <children>
-                             <CheckBox disable="true" mnemonicParsing="false"
-                               text="Ctrl + Shift + B でいますぐバックアップを実行（一定時間後）"
-                               fx:id="backupNowWithShortcutChkbox"/>
-                             <CheckBox disable="true" layoutX="30.0"
-                               layoutY="22.0" mnemonicParsing="false" text="Ctrl + Shift + Z でいますぐ特別バックアップを実行（一定時間後）"
-                               fx:id="specialBackupNowWithShortcutChkbox"/>
+                              <CheckBox mnemonicParsing="false" text="Ctrl + Shift + B でいますぐバックアップを実行（一定時間後）"
+                                fx:id="backupNowWithShortcutChkbox"/>
+                              <CheckBox layoutX="30.0" layoutY="22.0"
+                                mnemonicParsing="false" text="Ctrl + Shift + Z でいますぐ特別バックアップを実行（一定時間後）"
+                                fx:id="specialBackupNowWithShortcutChkbox"/>
                            </children>
                            <opaqueInsets>
                               <Insets />
@@ -104,13 +106,13 @@
                         </HBox>
                         <HBox alignment="CENTER_LEFT" prefHeight="63.0" prefWidth="920.0" spacing="15.0">
                            <children>
-                             <Button disable="true" mnemonicParsing="false"
-                               onAction="#onOpenConfigEditorBtnClick" prefHeight="40.0"
-                               prefWidth="170.0" text="コンフィグエディター" fx:id="openConfigEditorBtn"/>
-                             <Button disable="true" layoutX="30.0" layoutY="17.0"
-                               mnemonicParsing="false" onAction="#onOpenRelatedFolderBtnClick"
-                               prefHeight="40.0" prefWidth="170.0"
-                               text="各種フォルダを開く" fx:id="openRelatedFolderBtn"/>
+                              <Button disable="true" mnemonicParsing="false"
+                                onAction="#onOpenConfigEditorBtnClick" prefHeight="40.0"
+                                prefWidth="170.0" text="コンフィグエディター" fx:id="openConfigEditorBtn"/>
+                              <Button disable="true" layoutX="30.0" layoutY="17.0"
+                                mnemonicParsing="false" onAction="#onOpenRelatedFolderBtnClick"
+                                prefHeight="40.0" prefWidth="170.0"
+                                text="各種フォルダを開く" fx:id="openRelatedFolderBtn"/>
                            </children>
                            <padding>
                               <Insets left="20.0" />
