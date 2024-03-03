@@ -9,6 +9,7 @@ module io.github.hizumiaoba.mctimemachine {
   requires com.google.common;
   requires lombok;
   requires annotations;
+  requires com.github.kwhat.jnativehook;
 
   opens io.github.hizumiaoba.mctimemachine to javafx.fxml;
   exports io.github.hizumiaoba.mctimemachine;
