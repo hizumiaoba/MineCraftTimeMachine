@@ -8,6 +8,26 @@
 このツールを用いない適切な方法で安全にバックアップを取っておくとともに、
 バックアップを取らなかった場合に生じたデータ破損などは自己責任でお願いします。
 
+### Minecraft起動中のバックアップについて
+
+このツールでは以下の開発者の環境で、Minecraftをプレイ中のバックアップが可能であることを確認しています。
+ですが過信はせず、最低でもワールドに入っていない状態（タイトル画面）でのバックアップの実行を強くお勧めします。
+
+```log
+-- System Details --
+Details:
+	Minecraft Version: 1.7.10
+	Operating System: Windows 10 (amd64) version 10.0
+	Java Version: 1.8.0_51, Oracle Corporation
+	Java VM Version: Java HotSpot(TM) 64-Bit Server VM (mixed mode), Oracle Corporation
+	Memory: 145999072 bytes (139 MB) / 268435456 bytes (256 MB) up to 4294967296 bytes (4096 MB)
+	JVM Flags: 8 total; -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Xmx4G -XX:+UnlockExperimentalVMOptions -XX:+UseG1GC -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=256M
+	AABB Pool Size: 0 (0 bytes; 0 MB) allocated, 0 (0 bytes; 0 MB) used
+	IntCache: cache: 0, tcache: 0, allocated: 0, tallocated: 0
+	FML: 
+	GL info: ' Vendor: 'NVIDIA Corporation' Version: '4.6.0 NVIDIA 550.09' Renderer: 'NVIDIA GeForce GTX 1660 SUPER/PCIe/SSE2'
+```
+
 ## 使い方
 
 任意の場所で `MinecraftTimeMachine.exe` を実行するだけ！
