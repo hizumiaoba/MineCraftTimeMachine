@@ -53,7 +53,7 @@ dependencies {
     // test dependencies
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
-    testImplementation("com.google.truth:truth:1.4.1")
+    testImplementation("com.google.truth:truth:1.4.2")
 
     // annotation processor
     annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
