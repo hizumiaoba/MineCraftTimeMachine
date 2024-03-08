@@ -5,6 +5,7 @@ plugins {
     id("org.openjfx.javafxplugin") version "0.1.0"
     id("org.javamodularity.moduleplugin") version "1.8.14"
     id("org.jetbrains.kotlin.jvm")
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "io.github.hizumiaoba"
@@ -59,6 +60,10 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
     testAnnotationProcessor("org.projectlombok:lombok:${lombokVersion}")
     annotationProcessor("jakarta.annotation:jakarta.annotation-api:${jakartaVersion}")
+}
+
+tasks.shadowJar {
+    minimize()
 }
 
 tasks.withType<Test> {
