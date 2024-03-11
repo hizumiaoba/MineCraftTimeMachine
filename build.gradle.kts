@@ -5,6 +5,7 @@ plugins {
     id("org.openjfx.javafxplugin") version "0.1.0"
     id("org.javamodularity.moduleplugin") version "1.8.14"
     id("org.jetbrains.kotlin.jvm")
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "io.github.hizumiaoba"
@@ -41,23 +42,28 @@ javafx {
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
-    implementation("ch.qos.logback:logback-classic:1.4.14")
+    implementation("ch.qos.logback:logback-classic:1.5.3")
     implementation("com.google.guava:guava:33.0.0-jre")
     // https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
     implementation("org.xerial:sqlite-jdbc:3.45.1.0")
     implementation("org.projectlombok:lombok:${lombokVersion}")
     // https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api
     implementation("jakarta.annotation:jakarta.annotation-api:${jakartaVersion}")
+    implementation("com.github.kwhat:jnativehook:2.2.2")
 
     // test dependencies
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
-    testImplementation("com.google.truth:truth:1.3.0")
+    testImplementation("com.google.truth:truth:1.4.2")
 
     // annotation processor
     annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
     testAnnotationProcessor("org.projectlombok:lombok:${lombokVersion}")
     annotationProcessor("jakarta.annotation:jakarta.annotation-api:${jakartaVersion}")
+}
+
+tasks.shadowJar {
+    minimize()
 }
 
 tasks.withType<Test> {
