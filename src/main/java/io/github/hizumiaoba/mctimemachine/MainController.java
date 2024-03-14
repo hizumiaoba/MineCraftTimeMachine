@@ -33,6 +33,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -139,9 +140,6 @@ public class MainController {
       mainConfig.set("special_backup_on_shortcut",
         specialBackupNowWithShortcutChkbox.isSelected() ? "true" : "false");
       mainConfig.save();
-
-      JIntellitype.getInstance().cleanUp();
-
       es.shutdownNow();
       backupSchedulerExecutors.shutdownNow();
     }));
@@ -156,7 +154,7 @@ public class MainController {
       Shortcut.BACKUP_SPECIAL.id,
       MOD_CTRL_SHIFT,
       'Z');
-    JIntellitype.getInstance().addHotKeyListener(new GlobalShortcutKeyListener());
+    JIntellitype.getInstance().addHotKeyListener(new GlobalShortcutKeyListener(this));
 
     savesFolderPathField.setText(mainConfig.load("saves_folder_path"));
     backupSavingFolderPathField.setText(mainConfig.load("backup_saving_folder_path"));
@@ -397,8 +395,10 @@ public class MainController {
     service.execute(task);
   }
 
+  @RequiredArgsConstructor
   static class GlobalShortcutKeyListener implements HotkeyListener {
 
+    private final MainController mc;
     private static final ScheduledExecutorService oneshotExecutor = Executors.newSingleThreadScheduledExecutor(
       new ConcurrentThreadFactory("MainController", "Shortcut Key Listener", true));
 
@@ -407,24 +407,17 @@ public class MainController {
       switch (Shortcut.fromId(identifier)) {
         case BACKUP_NORMAL -> {
           log.debug("Normal backup shortcut is pressed.");
-          oneshotExecutor.schedule(() -> Platform.runLater(() -> {
-            MainController mc = new MainController();
-            mc.onBackupNowBtnClick();
-          }), 10, TimeUnit.SECONDS);
+          oneshotExecutor.schedule(() -> Platform.runLater(mc::onBackupNowBtnClick), 10,
+            TimeUnit.SECONDS);
         }
         case BACKUP_SPECIAL -> {
           log.debug("Special backup shortcut is pressed.");
-          oneshotExecutor.schedule(() -> Platform.runLater(() -> {
-            MainController mc = new MainController();
-            mc.onSpecialBackupNowBtnClick();
-          }), 10, TimeUnit.SECONDS);
+          oneshotExecutor.schedule(() -> Platform.runLater(mc::onSpecialBackupNowBtnClick), 10,
+            TimeUnit.SECONDS);
         }
         case OPEN_LAUNCHER -> {
           log.debug("Launcher shortcut is pressed.");
-          Platform.runLater(() -> {
-            MainController mc = new MainController();
-            mc.onOpenLauncherBtnClick();
-          });
+          Platform.runLater(mc::onOpenLauncherBtnClick);
         }
         case UNKNOWN -> log.warn("Unknown shortcut is pressed.");
       }
