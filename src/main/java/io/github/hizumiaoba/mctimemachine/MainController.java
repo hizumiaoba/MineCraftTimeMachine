@@ -406,11 +406,19 @@ public class MainController {
     public void onHotKey(int identifier) {
       switch (Shortcut.fromId(identifier)) {
         case BACKUP_NORMAL -> {
+          if (!mc.backupNowWithShortcutChkbox.isSelected()) {
+            log.trace("Abort backup shortcut because the checkbox is not selected.");
+            return;
+          }
           log.debug("Normal backup shortcut is pressed.");
           oneshotExecutor.schedule(() -> Platform.runLater(mc::onBackupNowBtnClick), 10,
             TimeUnit.SECONDS);
         }
         case BACKUP_SPECIAL -> {
+          if (!mc.specialBackupNowWithShortcutChkbox.isSelected()) {
+            log.trace("Abort special backup shortcut because the checkbox is not selected.");
+            return;
+          }
           log.debug("Special backup shortcut is pressed.");
           oneshotExecutor.schedule(() -> Platform.runLater(mc::onSpecialBackupNowBtnClick), 10,
             TimeUnit.SECONDS);
