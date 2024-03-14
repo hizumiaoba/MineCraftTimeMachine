@@ -2,6 +2,7 @@ package io.github.hizumiaoba.mctimemachine;
 
 import com.melloware.jintellitype.HotkeyListener;
 import com.melloware.jintellitype.JIntellitype;
+import io.github.hizumiaoba.mctimemachine.MainController.GlobalShortcutKeyListener.Shortcut;
 import io.github.hizumiaoba.mctimemachine.api.Config;
 import io.github.hizumiaoba.mctimemachine.api.ExceptionPopup;
 import io.github.hizumiaoba.mctimemachine.internal.ApplicationConfig;
@@ -145,6 +146,16 @@ public class MainController {
       backupSchedulerExecutors.shutdownNow();
     }));
 
+    int MOD_CTRL_SHIFT = JIntellitype.MOD_CONTROL + JIntellitype.MOD_SHIFT;
+
+    JIntellitype.getInstance().registerHotKey(
+      Shortcut.BACKUP_NORMAL.id,
+      MOD_CTRL_SHIFT,
+      'B');
+    JIntellitype.getInstance().registerHotKey(
+      Shortcut.BACKUP_SPECIAL.id,
+      MOD_CTRL_SHIFT,
+      'Z');
     JIntellitype.getInstance().addHotKeyListener(new GlobalShortcutKeyListener());
 
     savesFolderPathField.setText(mainConfig.load("saves_folder_path"));
