@@ -49,7 +49,9 @@ dependencies {
     implementation("org.projectlombok:lombok:${lombokVersion}")
     // https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api
     implementation("jakarta.annotation:jakarta.annotation-api:${jakartaVersion}")
-    implementation("com.github.kwhat:jnativehook:2.2.2")
+    // https://mvnrepository.com/artifact/com.melloware/jintellitype
+    implementation("com.melloware:jintellitype:1.4.1")
+
 
     // test dependencies
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
