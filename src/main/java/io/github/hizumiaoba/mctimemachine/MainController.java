@@ -1,14 +1,13 @@
 package io.github.hizumiaoba.mctimemachine;
 
-import com.github.kwhat.jnativehook.GlobalScreen;
+import com.melloware.jintellitype.HotkeyListener;
+import com.melloware.jintellitype.JIntellitype;
+import io.github.hizumiaoba.mctimemachine.MainController.GlobalShortcutKeyListener.Shortcut;
 import io.github.hizumiaoba.mctimemachine.api.Config;
 import io.github.hizumiaoba.mctimemachine.api.ExceptionPopup;
 import io.github.hizumiaoba.mctimemachine.internal.ApplicationConfig;
 import io.github.hizumiaoba.mctimemachine.internal.concurrent.ConcurrentThreadFactory;
 import io.github.hizumiaoba.mctimemachine.internal.fs.BackupUtils;
-import io.github.hizumiaoba.mctimemachine.internal.keyhook.GlobalNativeKeyListenerExecutor;
-import io.github.hizumiaoba.mctimemachine.internal.listener.NormalBackupKeyShortcutListener;
-import io.github.hizumiaoba.mctimemachine.internal.listener.SpecialBackupKeyShortcutListener;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +33,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -144,27 +144,17 @@ public class MainController {
       backupSchedulerExecutors.shutdownNow();
     }));
 
-    GlobalNativeKeyListenerExecutor globalNativeKeyListenerExecutor = new GlobalNativeKeyListenerExecutor(
-      new NormalBackupKeyShortcutListener(() -> {
-        if (this.backupNowWithShortcutChkbox.isSelected()) {
-          onBackupNowBtnClick();
-        }
-      }),
-      new SpecialBackupKeyShortcutListener(() -> {
-        if (this.specialBackupNowWithShortcutChkbox.isSelected()) {
-          onSpecialBackupNowBtnClick();
-        }
-      })
-    );
+    int MOD_CTRL_SHIFT = JIntellitype.MOD_CONTROL + JIntellitype.MOD_SHIFT;
 
-    try {
-      GlobalScreen.registerNativeHook();
-      GlobalScreen.addNativeKeyListener(globalNativeKeyListenerExecutor);
-    } catch (Exception e) {
-      ExceptionPopup popup = new ExceptionPopup(e, "ショートカットフックを登録できませんでした。",
-        "MainController#initialize()$lambda");
-      popup.pop();
-    }
+    JIntellitype.getInstance().registerHotKey(
+      Shortcut.BACKUP_NORMAL.id,
+      MOD_CTRL_SHIFT,
+      'B');
+    JIntellitype.getInstance().registerHotKey(
+      Shortcut.BACKUP_SPECIAL.id,
+      MOD_CTRL_SHIFT,
+      'Z');
+    JIntellitype.getInstance().addHotKeyListener(new GlobalShortcutKeyListener(this));
 
     savesFolderPathField.setText(mainConfig.load("saves_folder_path"));
     backupSavingFolderPathField.setText(mainConfig.load("backup_saving_folder_path"));
@@ -403,5 +393,64 @@ public class MainController {
 
   private void runConcurrentTask(ExecutorService service, Runnable task) {
     service.execute(task);
+  }
+
+  @RequiredArgsConstructor
+  static class GlobalShortcutKeyListener implements HotkeyListener {
+
+    private final MainController mc;
+    private static final ScheduledExecutorService oneshotExecutor = Executors.newSingleThreadScheduledExecutor(
+      new ConcurrentThreadFactory("MainController", "Shortcut Key Listener", true));
+
+    @Override
+    public void onHotKey(int identifier) {
+      switch (Shortcut.fromId(identifier)) {
+        case BACKUP_NORMAL -> {
+          if (!mc.backupNowWithShortcutChkbox.isSelected()) {
+            log.trace("Abort backup shortcut because the checkbox is not selected.");
+            return;
+          }
+          log.debug("Normal backup shortcut is pressed.");
+          oneshotExecutor.schedule(() -> Platform.runLater(mc::onBackupNowBtnClick), 10,
+            TimeUnit.SECONDS);
+        }
+        case BACKUP_SPECIAL -> {
+          if (!mc.specialBackupNowWithShortcutChkbox.isSelected()) {
+            log.trace("Abort special backup shortcut because the checkbox is not selected.");
+            return;
+          }
+          log.debug("Special backup shortcut is pressed.");
+          oneshotExecutor.schedule(() -> Platform.runLater(mc::onSpecialBackupNowBtnClick), 10,
+            TimeUnit.SECONDS);
+        }
+        case OPEN_LAUNCHER -> {
+          log.debug("Launcher shortcut is pressed.");
+          Platform.runLater(mc::onOpenLauncherBtnClick);
+        }
+        case UNKNOWN -> log.warn("Unknown shortcut is pressed.");
+      }
+    }
+
+    public enum Shortcut {
+      BACKUP_NORMAL(101),
+      BACKUP_SPECIAL(102),
+      OPEN_LAUNCHER(901),
+      UNKNOWN(-1);
+
+      private final int id;
+
+      Shortcut(int id) {
+        this.id = id;
+      }
+
+      public static Shortcut fromId(int id) {
+        for (Shortcut s : values()) {
+          if (s.id == id) {
+            return s;
+          }
+        }
+        return UNKNOWN;
+      }
+    }
   }
 }

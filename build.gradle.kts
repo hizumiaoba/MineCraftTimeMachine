@@ -3,7 +3,7 @@ plugins {
     application
     id("org.beryx.jlink") version "3.0.1"
     id("org.openjfx.javafxplugin") version "0.1.0"
-    id("org.javamodularity.moduleplugin") version "1.8.14"
+    id("org.javamodularity.moduleplugin") version "1.8.15"
     id("org.jetbrains.kotlin.jvm")
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
@@ -49,7 +49,9 @@ dependencies {
     implementation("org.projectlombok:lombok:${lombokVersion}")
     // https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api
     implementation("jakarta.annotation:jakarta.annotation-api:${jakartaVersion}")
-    implementation("com.github.kwhat:jnativehook:2.2.2")
+    // https://mvnrepository.com/artifact/com.melloware/jintellitype
+    implementation("com.melloware:jintellitype:1.4.1")
+
 
     // test dependencies
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
