@@ -41,11 +41,6 @@ jobs:
           jpackageImage
           -i
           --scan
-    - name: Upload built artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: ${{ matrix.os }}-jpackageImage
-        path: build/jpackage/MinecraftTimeMachine
 
     # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
     # If your project does not have the Gradle Wrapper configured, you can use the following configuration to run Gradle with a specified version.
