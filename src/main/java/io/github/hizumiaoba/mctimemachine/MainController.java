@@ -30,7 +30,6 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -301,17 +300,26 @@ public class MainController {
 
   @FXML
   void onSelectBackupSavingFolderBtnClick() {
-      DirectoryChooser dc = new DirectoryChooser();
-      dc.setTitle("バックアップを保存するフォルダを選択してください。");
-      dc.setInitialDirectory(new File(System.getProperty("user.home")));
-      log.debug("awaiting for the user to select the backup saving folder.");
-      File f = dc.showDialog(null);
+    runConcurrentTask(es, () -> {
+      File f = opebFileChooser("バックアップを保存するフォルダを選択してください。",
+        new File(System.getProperty("user.home")));
       if (f == null) {
-        log.debug("Got nothing.");
         return;
       }
-      log.debug("Got the folder: {}", f.getAbsolutePath());
-      backupSavingFolderPathField.setText(f.getAbsolutePath());
+      Platform.runLater(() -> assignPath(backupSavingFolderPathField, f));
+    });
+  }
+
+  @FXML
+  void onSelectSavesFolderBtnClick() {
+    runConcurrentTask(es, () -> {
+      File f = opebFileChooser("\".minecraft/saves\"フォルダを選択してください。",
+        new File(System.getProperty("user.home")));
+      if (f == null) {
+        return;
+      }
+      Platform.runLater(() -> assignPath(savesFolderPathField, f));
+    });
   }
 
   @FXML
@@ -329,19 +337,25 @@ public class MainController {
       launcherExePathField.setText(f.getAbsolutePath());
   }
 
-  @FXML
-  void onSelectSavesFolderBtnClick() {
-      DirectoryChooser dc = new DirectoryChooser();
-      dc.setTitle("\".minecraft/saves\"フォルダを選択してください。");
-      dc.setInitialDirectory(new File(System.getProperty("user.home")));
-      log.debug("awaiting for the user to select the saves folder.");
-      File f = dc.showDialog(null);
-      if (f == null) {
-        log.debug("Got nothing.");
-        return;
-      }
-      log.debug("Got the folder: {}", f.getAbsolutePath());
-      savesFolderPathField.setText(f.getAbsolutePath());
+  private File opebFileChooser(String title, File initialDir) {
+    FileChooser fc = new FileChooser();
+    fc.setTitle(title);
+    fc.setInitialDirectory(initialDir);
+    log.debug("awaiting for the user to select the file.");
+    File f = fc.showOpenDialog(null);
+    if (f == null) {
+      log.debug("Got nothing.");
+      ExceptionPopup p = new ExceptionPopup(new NullPointerException(),
+        "ファイルを選択できませんでした。", "MainController#opebFileChooser()$lambda");
+      p.pop();
+      return null;
+    }
+    return f;
+  }
+
+  private void assignPath(TextField injected, File target) {
+    log.debug("injecting the path: {}", target.getAbsolutePath());
+    injected.setText(target.getAbsolutePath());
   }
 
   @FXML
