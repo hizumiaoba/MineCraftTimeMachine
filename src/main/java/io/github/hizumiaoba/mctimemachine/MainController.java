@@ -300,41 +300,32 @@ public class MainController {
 
   @FXML
   void onSelectBackupSavingFolderBtnClick() {
-    runConcurrentTask(es, () -> {
       File f = opebFileChooser("バックアップを保存するフォルダを選択してください。",
         new File(System.getProperty("user.home")));
       if (f == null) {
         return;
       }
-      Platform.runLater(() -> assignPath(backupSavingFolderPathField, f));
-    });
+    assignPath(backupSavingFolderPathField, f);
   }
 
   @FXML
   void onSelectSavesFolderBtnClick() {
-    runConcurrentTask(es, () -> {
       File f = opebFileChooser("\".minecraft/saves\"フォルダを選択してください。",
         new File(System.getProperty("user.home")));
       if (f == null) {
         return;
       }
-      Platform.runLater(() -> assignPath(savesFolderPathField, f));
-    });
+    assignPath(savesFolderPathField, f);
   }
 
   @FXML
   void onSelectLauncherExeBtnClick() {
-      FileChooser fc = new FileChooser();
-      fc.setTitle("ランチャーの実行ファイルを選択してください。");
-      fc.setInitialDirectory(new File(System.getProperty("user.home")));
-      log.debug("awaiting for the user to select the executable file.");
-      File f = fc.showOpenDialog(null);
-      if (f == null) {
-        log.debug("Got nothing.");
-        return;
-      }
-      log.debug("Got the file: {}", f.getAbsolutePath());
-      launcherExePathField.setText(f.getAbsolutePath());
+    File f = opebFileChooser("ランチャーの実行ファイルを選択してください。",
+      new File(System.getProperty("user.home")));
+    if (f == null) {
+      return;
+    }
+    assignPath(launcherExePathField, f);
   }
 
   private File opebFileChooser(String title, File initialDir) {
