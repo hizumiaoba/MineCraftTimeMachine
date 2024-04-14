@@ -300,7 +300,7 @@ public class MainController {
 
   @FXML
   void onSelectBackupSavingFolderBtnClick() {
-      File f = opebFileChooser("バックアップを保存するフォルダを選択してください。",
+    File f = openFileChooser("バックアップを保存するフォルダを選択してください。",
         new File(System.getProperty("user.home")));
       if (f == null) {
         return;
@@ -310,7 +310,7 @@ public class MainController {
 
   @FXML
   void onSelectSavesFolderBtnClick() {
-      File f = opebFileChooser("\".minecraft/saves\"フォルダを選択してください。",
+    File f = openFileChooser("\".minecraft/saves\"フォルダを選択してください。",
         new File(System.getProperty("user.home")));
       if (f == null) {
         return;
@@ -320,7 +320,7 @@ public class MainController {
 
   @FXML
   void onSelectLauncherExeBtnClick() {
-    File f = opebFileChooser("ランチャーの実行ファイルを選択してください。",
+    File f = openFileChooser("ランチャーの実行ファイルを選択してください。",
       new File(System.getProperty("user.home")));
     if (f == null) {
       return;
@@ -328,7 +328,7 @@ public class MainController {
     assignPath(launcherExePathField, f);
   }
 
-  private File opebFileChooser(String title, File initialDir) {
+  private File openFileChooser(String title, File initialDir) {
     FileChooser fc = new FileChooser();
     fc.setTitle(title);
     fc.setInitialDirectory(initialDir);
