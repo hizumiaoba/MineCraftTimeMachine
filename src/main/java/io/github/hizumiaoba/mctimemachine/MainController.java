@@ -336,9 +336,6 @@ public class MainController {
     File f = fc.showOpenDialog(null);
     if (f == null) {
       log.debug("Got nothing.");
-      ExceptionPopup p = new ExceptionPopup(new NullPointerException(),
-        "ファイルを選択できませんでした。", "MainController#opebFileChooser()$lambda");
-      p.pop();
       return null;
     }
     return f;
