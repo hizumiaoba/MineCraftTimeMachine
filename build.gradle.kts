@@ -1,11 +1,11 @@
 plugins {
     java
     application
-    id("org.beryx.jlink") version "3.0.1"
-    id("org.openjfx.javafxplugin") version "0.1.0"
-    id("org.javamodularity.moduleplugin") version "1.8.15"
+    alias(libs.plugins.jlink)
+    alias(libs.plugins.moduleplugin)
+    alias(libs.plugins.shadow)
+    alias(libs.plugins.javafxpugin)
     id("org.jetbrains.kotlin.jvm")
-    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "io.github.hizumiaoba"
@@ -40,28 +40,26 @@ javafx {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation(libs.kotlin.stdlib)
 
-    implementation("ch.qos.logback:logback-classic:1.5.5")
-    implementation("com.google.guava:guava:33.1.0-jre")
+    implementation(libs.logback)
+    implementation(libs.guava)
     // https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
-    implementation("org.xerial:sqlite-jdbc:3.45.2.0")
-    implementation("org.projectlombok:lombok:${lombokVersion}")
+    implementation(libs.sqlite.jdbc)
+    implementation(libs.lombok)
     // https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api
-    implementation("jakarta.annotation:jakarta.annotation-api:${jakartaVersion}")
+    implementation(libs.jakarta.annotation)
     // https://mvnrepository.com/artifact/com.melloware/jintellitype
-    implementation("com.melloware:jintellitype:1.4.1")
+    implementation(libs.jintelitype)
 
 
     // test dependencies
-    testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
-    testImplementation("com.google.truth:truth:1.4.2")
+    testImplementation(libs.bundles.testlibs)
+    testRuntimeOnly(libs.jupiter.engine)
 
     // annotation processor
-    annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
-    testAnnotationProcessor("org.projectlombok:lombok:${lombokVersion}")
-    annotationProcessor("jakarta.annotation:jakarta.annotation-api:${jakartaVersion}")
+    annotationProcessor(libs.bundles.annotationProcess)
+    testAnnotationProcessor(libs.lombok)
 }
 
 tasks.shadowJar {
