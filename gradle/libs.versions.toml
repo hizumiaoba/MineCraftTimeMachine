@@ -1,0 +1,28 @@
+[versions]
+junit = "5.10.1"
+lombok = "1.18.30"
+jakarta = "2.1.1"
+
+[libraries]
+logback = { group = "ch.qos.logback", name = "logback-classic", version = "1.5.5" }
+guava = { group = "com.google.guava", name = "guava", version = "33.1.0-jre" }
+sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version = "3.45.2.0" }
+lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
+jakarta-annotation = { group = "jakarta.annotation", name = "jakarta.annotation-api", version.ref = "jakarta" }
+jintelitype = { group = "com.melloware", name = "jintellitype", version = "1.4.1" }
+jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
+jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }
+truth = { group = "com.google.truth", name = "truth", version = "1.4.2" }
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version = "1.8.22" }
+
+[bundles]
+# except for engine dependency, which is only needed for running tests
+testlibs = ["jupiter-api", "truth"]
+# convenience bundle for annotationProcessor
+annotationProcess = ["lombok", "jakarta-annotation"]
+
+[plugins]
+jlink = { id = "org.beryx.jlink", version = "3.0.1" }
+javafxpugin = { id = "org.openjfx.javafxplugin", version = "0.1.0" }
+moduleplugin = { id = "org.javamodularity.moduleplugin", version = "1.8.15" }
+shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
