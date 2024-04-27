@@ -16,4 +16,13 @@ public enum Suffix {
   public String getSuffix() {
     return suffix;
   }
+
+  public static Suffix fromString(String suffix) {
+    for (Suffix s : Suffix.values()) {
+      if (s.getSuffix().equals(suffix)) {
+        return s;
+      }
+    }
+    return null;
+  }
 }
