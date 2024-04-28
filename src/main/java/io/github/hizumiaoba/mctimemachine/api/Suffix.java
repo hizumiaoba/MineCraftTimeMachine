@@ -4,8 +4,7 @@ public enum Suffix {
 
   ALPHA("Alpha"),
   BETA("Beta"),
-  NONE(""),
-  EXPERIMENTAL("Experimental");
+  NONE("");
 
   private final String suffix;
 
