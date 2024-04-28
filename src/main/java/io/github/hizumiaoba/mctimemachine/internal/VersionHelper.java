@@ -4,7 +4,6 @@ import io.github.hizumiaoba.mctimemachine.MineCraftTimeMachineApplication;
 import io.github.hizumiaoba.mctimemachine.api.Suffix;
 import io.github.hizumiaoba.mctimemachine.api.Version;
 import java.util.Map;
-import lombok.Getter;
 
 public class VersionHelper {
 
@@ -39,7 +38,6 @@ public class VersionHelper {
     }
   }
 
-  @Getter
   record VersionObj(int major, int minor, int patch, Suffix suffix) {
 
     public static VersionObj fromString(String version) {
@@ -48,7 +46,7 @@ public class VersionHelper {
       int major = Integer.parseInt(versionParts[0]);
       int minor = Integer.parseInt(versionParts[1]);
       int patch = Integer.parseInt(versionParts[2]);
-      Suffix suffix = Suffix.fromString(parts[1]);
+      Suffix suffix = parts[1] != null ? Suffix.fromString(parts[1]) : Suffix.NONE;
       return new VersionObj(major, minor, patch, suffix);
     }
 
@@ -60,16 +58,24 @@ public class VersionHelper {
       return constructVersionString(major, minor, patch, suffix);
     }
 
-    public Map<String, UpdateStatus> checkStatus(VersionObj expectGreater, boolean includeSuffix) {
-      UpdateStatus minorStatus = minor < expectGreater.minor() ? UpdateStatus.OUTDATED
-        : minor == expectGreater.minor() ? UpdateStatus.UP_TO_DATE : UpdateStatus.UNSTABLE;
-      UpdateStatus majorStatus = major < expectGreater.major() ? UpdateStatus.OUTDATED
-        : major == expectGreater.major() ? UpdateStatus.UP_TO_DATE : UpdateStatus.UNSTABLE;
-      UpdateStatus patchStatus = patch < expectGreater.patch() ? UpdateStatus.OUTDATED
-        : patch == expectGreater.patch() ? UpdateStatus.UP_TO_DATE : UpdateStatus.UNSTABLE;
+    public boolean checkSuffixStatus(VersionObj remote) {
+      return switch (this.suffix()) {
+        case ALPHA -> true;
+        case BETA -> remote.suffix() != Suffix.ALPHA;
+        case NONE -> remote.suffix() == Suffix.NONE;
+      };
+    }
+
+    public Map<String, UpdateStatus> checkStatus(VersionObj remote, boolean includeSuffix) {
+      UpdateStatus minorStatus = minor < remote.minor() ? UpdateStatus.OUTDATED
+        : minor == remote.minor() ? UpdateStatus.UP_TO_DATE : UpdateStatus.UNSTABLE;
+      UpdateStatus majorStatus = major < remote.major() ? UpdateStatus.OUTDATED
+        : major == remote.major() ? UpdateStatus.UP_TO_DATE : UpdateStatus.UNSTABLE;
+      UpdateStatus patchStatus = patch < remote.patch() ? UpdateStatus.OUTDATED
+        : patch == remote.patch() ? UpdateStatus.UP_TO_DATE : UpdateStatus.UNSTABLE;
       UpdateStatus suffixStatus =
-        includeSuffix ? suffix.compareTo(expectGreater.suffix()) > 0 ? UpdateStatus.OUTDATED
-          : suffix.compareTo(expectGreater.suffix()) == 0 ? UpdateStatus.UP_TO_DATE
+        includeSuffix ? suffix.compareTo(remote.suffix()) > 0 ? UpdateStatus.OUTDATED
+          : suffix.compareTo(remote.suffix()) == 0 ? UpdateStatus.UP_TO_DATE
             : UpdateStatus.UNSTABLE : UpdateStatus.UP_TO_DATE;
       return Map.of("major", majorStatus, "minor", minorStatus, "patch", patchStatus, "suffix",
         suffixStatus);
