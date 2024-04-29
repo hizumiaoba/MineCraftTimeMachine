@@ -50,7 +50,7 @@ public class VersionHelper {
       return new VersionObj(major, minor, patch, suffix);
     }
 
-    public static VersionObj fromAnnotation(Version version) {
+    static VersionObj fromAnnotation(Version version) {
       return new VersionObj(version.major(), version.minor(), version.patch(), version.suffix());
     }
 
