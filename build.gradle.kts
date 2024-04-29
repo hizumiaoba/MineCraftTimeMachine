@@ -66,7 +66,7 @@ tasks.shadowJar {
     minimize()
 }
 
-tasks.test {
+tasks.withType<Test> {
     useJUnitPlatform()
 }
 
