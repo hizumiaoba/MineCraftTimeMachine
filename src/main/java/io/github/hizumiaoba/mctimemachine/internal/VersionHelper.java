@@ -46,7 +46,7 @@ public class VersionHelper {
       int major = Integer.parseInt(versionParts[0]);
       int minor = Integer.parseInt(versionParts[1]);
       int patch = Integer.parseInt(versionParts[2]);
-      Suffix suffix = parts[1] != null ? Suffix.fromString(parts[1]) : Suffix.NONE;
+      Suffix suffix = parts.length != 1 ? Suffix.fromString(parts[1]) : Suffix.NONE;
       return new VersionObj(major, minor, patch, suffix);
     }
 
