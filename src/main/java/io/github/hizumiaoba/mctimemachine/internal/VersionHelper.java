@@ -67,13 +67,16 @@ public class VersionHelper {
     }
 
     public Map<String, UpdateStatus> checkStatus(VersionObj remote) {
-      UpdateStatus minorStatus = minor < remote.minor() ? UpdateStatus.OUTDATED
-        : minor == remote.minor() ? UpdateStatus.UP_TO_DATE : UpdateStatus.UNSTABLE;
       UpdateStatus majorStatus = major < remote.major() ? UpdateStatus.OUTDATED
-        : major == remote.major() ? UpdateStatus.UP_TO_DATE : UpdateStatus.UNSTABLE;
+        : major == remote.major() ? UpdateStatus.UP_TO_DATE : UpdateStatus.UNKNOWN;
+      UpdateStatus minorStatus = minor < remote.minor() ? UpdateStatus.OUTDATED
+        : minor == remote.minor() ? UpdateStatus.UP_TO_DATE : UpdateStatus.UNKNOWN;
       UpdateStatus patchStatus = patch < remote.patch() ? UpdateStatus.OUTDATED
-        : patch == remote.patch() ? UpdateStatus.UP_TO_DATE : UpdateStatus.UNSTABLE;
-      return Map.of("major", majorStatus, "minor", minorStatus, "patch", patchStatus);
+        : patch == remote.patch() ? UpdateStatus.UP_TO_DATE : UpdateStatus.UNKNOWN;
+      UpdateStatus suffixStatus =
+        checkSuffixStatus(remote) ? UpdateStatus.UNSTABLE : UpdateStatus.UP_TO_DATE;
+      return Map.of("major", majorStatus, "minor", minorStatus, "patch", patchStatus, "suffix",
+        suffixStatus);
     }
   }
 }
