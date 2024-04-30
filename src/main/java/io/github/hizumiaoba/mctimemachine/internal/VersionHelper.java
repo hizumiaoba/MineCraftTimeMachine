@@ -3,6 +3,7 @@ package io.github.hizumiaoba.mctimemachine.internal;
 import io.github.hizumiaoba.mctimemachine.MineCraftTimeMachineApplication;
 import io.github.hizumiaoba.mctimemachine.api.Suffix;
 import io.github.hizumiaoba.mctimemachine.api.Version;
+import java.util.List;
 import java.util.Map;
 
 public class VersionHelper {
@@ -36,6 +37,31 @@ public class VersionHelper {
       }
       return UNKNOWN;
     }
+  }
+
+  private List<VersionObj> getRemoteVersions() {
+
+  }
+
+  public boolean check() {
+    List<VersionObj> remoteVersions = getRemoteVersions();
+    final VersionObj currentVersion = VersionObj.fromAnnotation(getCurrentVersion());
+    final boolean isClientUnstable = currentVersion.suffix() != Suffix.NONE;
+    for (VersionObj remoteVersion : remoteVersions) {
+      if (isClientUnstable && remoteVersion.suffix() == Suffix.NONE) {
+        return true;
+      } else if (currentVersion.suffix() != remoteVersion.suffix()) {
+        continue;
+      }
+      Map<String, UpdateStatus> status = currentVersion.checkStatus(remoteVersion);
+      return status
+        .keySet()
+        .parallelStream()
+        .map(status::get)
+        .map(UpdateStatus.UP_TO_DATE::equals)
+        .reduce(false, (a, b) -> a || b);
+    }
+    return true;
   }
 
   record VersionObj(int major, int minor, int patch, Suffix suffix) {
@@ -73,10 +99,7 @@ public class VersionHelper {
         : minor == remote.minor() ? UpdateStatus.UP_TO_DATE : UpdateStatus.UNKNOWN;
       UpdateStatus patchStatus = patch < remote.patch() ? UpdateStatus.OUTDATED
         : patch == remote.patch() ? UpdateStatus.UP_TO_DATE : UpdateStatus.UNKNOWN;
-      UpdateStatus suffixStatus =
-        checkSuffixStatus(remote) ? UpdateStatus.UNSTABLE : UpdateStatus.UP_TO_DATE;
-      return Map.of("major", majorStatus, "minor", minorStatus, "patch", patchStatus, "suffix",
-        suffixStatus);
+      return Map.of("major", majorStatus, "minor", minorStatus, "patch", patchStatus);
     }
   }
 }
