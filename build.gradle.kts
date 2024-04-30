@@ -51,6 +51,8 @@ dependencies {
     implementation(libs.jakarta.annotation)
     // https://mvnrepository.com/artifact/com.melloware/jintellitype
     implementation(libs.jintelitype)
+    implementation(libs.bundles.jackson)
+    implementation(libs.okhttp)
 
 
     // test dependencies
