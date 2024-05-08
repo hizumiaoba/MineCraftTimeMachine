@@ -82,6 +82,9 @@ public class VersionHelper {
   record VersionObj(int major, int minor, int patch, Suffix suffix) {
 
     public static VersionObj fromString(String version) {
+      if (version.startsWith("v")) {
+        version = version.substring(1);
+      }
       String[] parts = version.split("-");
       String[] versionParts = parts[0].split("\\.");
       int major = Integer.parseInt(versionParts[0]);
