@@ -63,6 +63,9 @@ public class VersionHelper {
     final VersionObj currentVersion = VersionObj.fromAnnotation(getCurrentVersion());
     final boolean isClientUnstable = currentVersion.suffix() != Suffix.NONE;
     for (VersionObj remoteVersion : remoteVersions) {
+      if (currentVersion.doesCompletelyMatch(remoteVersion, true)) {
+        return false;
+      }
       if (isClientUnstable && remoteVersion.suffix() == Suffix.NONE) {
         return true;
       } else if (currentVersion.suffix() != remoteVersion.suffix()) {
@@ -118,6 +121,11 @@ public class VersionHelper {
       UpdateStatus patchStatus = patch < remote.patch() ? UpdateStatus.OUTDATED
         : patch == remote.patch() ? UpdateStatus.UP_TO_DATE : UpdateStatus.UNKNOWN;
       return Map.of("major", majorStatus, "minor", minorStatus, "patch", patchStatus);
+    }
+
+    public boolean doesCompletelyMatch(VersionObj remote, boolean ignoreSuffix) {
+      return major == remote.major() && minor == remote.minor() && patch == remote.patch()
+        && (ignoreSuffix || suffix == remote.suffix());
     }
   }
 }
