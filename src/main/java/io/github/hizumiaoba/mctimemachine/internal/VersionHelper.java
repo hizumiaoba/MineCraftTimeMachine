@@ -3,9 +3,14 @@ package io.github.hizumiaoba.mctimemachine.internal;
 import io.github.hizumiaoba.mctimemachine.MineCraftTimeMachineApplication;
 import io.github.hizumiaoba.mctimemachine.api.Suffix;
 import io.github.hizumiaoba.mctimemachine.api.Version;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GitHub;
 
+@Slf4j
 public class VersionHelper {
 
   private static final String RELEASE_API_URI = "https://api.github.com/repos/hizumiaoba/MineCraftTimeMachine/releases";
@@ -39,12 +44,22 @@ public class VersionHelper {
     }
   }
 
-  private List<VersionObj> getRemoteVersions() {
-
+  private List<VersionObj> getAllRemoteVersions() {
+    GitHub gh = null;
+    try {
+      gh = GitHub.connectAnonymously();
+      GHRepository repo = gh.getRepository("hizumiaoba/MineCraftTimeMachine");
+      return repo.listReleases().toList().parallelStream()
+        .map(r -> VersionObj.fromString(r.getTagName())).toList();
+    } catch (IOException e) {
+      log.error("Failed to fetch remote versions", e);
+      // fall back client version so that any update check won't be triggered
+      return List.of(VersionObj.fromAnnotation(getCurrentVersion()));
+    }
   }
 
   public boolean check() {
-    List<VersionObj> remoteVersions = getRemoteVersions();
+    List<VersionObj> remoteVersions = getAllRemoteVersions();
     final VersionObj currentVersion = VersionObj.fromAnnotation(getCurrentVersion());
     final boolean isClientUnstable = currentVersion.suffix() != Suffix.NONE;
     for (VersionObj remoteVersion : remoteVersions) {
