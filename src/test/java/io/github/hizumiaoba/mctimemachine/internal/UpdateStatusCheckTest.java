@@ -15,10 +15,11 @@ public class UpdateStatusCheckTest {
     VersionHelper.VersionObj remoteVersionMock = VersionHelper.VersionObj.fromString("1.2.5-Beta");
 
     Map<String, UpdateStatus> status = currentVersionMock.checkStatus(remoteVersionMock);
+    final boolean suffixStatus = currentVersionMock.checkSuffixStatus(remoteVersionMock);
 
     assertThat(status.get("major")).isEqualTo(UpdateStatus.UP_TO_DATE);
     assertThat(status.get("minor")).isEqualTo(UpdateStatus.OUTDATED);
     assertThat(status.get("patch")).isEqualTo(UpdateStatus.OUTDATED);
-    assertThat(status.get("suffix")).isEqualTo(UpdateStatus.UP_TO_DATE);
+    assertThat(suffixStatus).isFalse();
   }
 }
