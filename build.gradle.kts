@@ -53,7 +53,6 @@ dependencies {
     implementation(libs.jintelitype)
     implementation(libs.bundles.jackson)
     implementation(libs.okhttp)
-    implementation(libs.gh.api.client)
 
 
     // test dependencies
