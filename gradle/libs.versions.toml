@@ -19,6 +19,7 @@ okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "4.12.0" }
 jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core", version.ref = "jackson" }
 jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "jackson" }
 jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations", version.ref = "jackson" }
+gh-api = { group = "org.kohsuke", name = "github-api", version = "1.321" }
 
 [bundles]
 # except for engine dependency, which is only needed for running tests

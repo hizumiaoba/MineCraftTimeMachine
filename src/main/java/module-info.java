@@ -12,6 +12,7 @@ module io.github.hizumiaoba.mctimemachine {
   requires jintellitype;
   requires okhttp3;
   requires com.fasterxml.jackson.databind;
+  requires org.kohsuke.github.api;
 
   opens io.github.hizumiaoba.mctimemachine to javafx.fxml;
   exports io.github.hizumiaoba.mctimemachine;
