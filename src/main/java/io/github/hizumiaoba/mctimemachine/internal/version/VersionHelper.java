@@ -60,7 +60,7 @@ public class VersionHelper {
     GitHub gh = GitHub.connectAnonymously();
     List<GHRelease> releases = gh.getRepository("hizumiaoba/MineCraftTimeMachine").listReleases()
       .toList();
-    log.trace("Found {} releases", releases.size());
+    log.debug("Found {} releases", releases.size());
     log.trace("Latest release: {}", releases.get(0).getTagName());
     return VersionObj.parse(releases.get(0).getTagName());
   }
