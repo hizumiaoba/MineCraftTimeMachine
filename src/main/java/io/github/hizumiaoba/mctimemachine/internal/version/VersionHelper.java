@@ -1,5 +1,7 @@
 package io.github.hizumiaoba.mctimemachine.internal.version;
 
+import io.github.hizumiaoba.mctimemachine.MineCraftTimeMachineApplication;
+import io.github.hizumiaoba.mctimemachine.api.Version;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -48,5 +50,13 @@ public class VersionHelper {
       default ->
         "更新の種類を特定できません。直接アップデートを確認してください。" + clientVersionNotice;
     };
+  }
+
+  public VersionObj getClientVersion() {
+    return VersionObj.parse(MineCraftTimeMachineApplication.class.getAnnotation(Version.class));
+  }
+
+  public VersionObj getRemoteVersion() {
+    return VersionObj.parse(MineCraftTimeMachineApplication.class.getAnnotation(Version.class));
   }
 }
