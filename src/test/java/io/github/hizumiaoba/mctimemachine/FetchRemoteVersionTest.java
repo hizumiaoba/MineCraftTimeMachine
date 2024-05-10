@@ -6,8 +6,10 @@ import static org.junit.jupiter.api.Assertions.fail;
 import io.github.hizumiaoba.mctimemachine.internal.version.VersionHelper;
 import io.github.hizumiaoba.mctimemachine.internal.version.VersionObj;
 import java.io.IOException;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+@Disabled("Disabled for CI/CD")
 public class FetchRemoteVersionTest {
 
   @Test
