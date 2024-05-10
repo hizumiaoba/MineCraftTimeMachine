@@ -1,10 +1,14 @@
 package io.github.hizumiaoba.mctimemachine.internal.version;
 
-import io.github.hizumiaoba.mctimemachine.MineCraftTimeMachineApplication;
-import io.github.hizumiaoba.mctimemachine.api.Version;
+import java.io.IOException;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.kohsuke.github.GHRelease;
+import org.kohsuke.github.GitHub;
 
 @RequiredArgsConstructor
+@Slf4j
 public class VersionHelper {
 
   private final VersionObj clientVersion;
@@ -52,11 +56,12 @@ public class VersionHelper {
     };
   }
 
-  public VersionObj getClientVersion() {
-    return VersionObj.parse(MineCraftTimeMachineApplication.class.getAnnotation(Version.class));
-  }
-
-  public VersionObj getRemoteVersion() {
-    return VersionObj.parse(MineCraftTimeMachineApplication.class.getAnnotation(Version.class));
+  public static VersionObj getLatestRemoteVersion() throws IOException {
+    GitHub gh = GitHub.connectAnonymously();
+    List<GHRelease> releases = gh.getRepository("hizumiaoba/MineCraftTimeMachine").listReleases()
+      .toList();
+    log.trace("Found {} releases", releases.size());
+    log.trace("Latest release: {}", releases.get(0).getTagName());
+    return VersionObj.parse(releases.get(0).getTagName());
   }
 }
