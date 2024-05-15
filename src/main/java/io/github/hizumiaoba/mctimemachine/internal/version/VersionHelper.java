@@ -56,9 +56,12 @@ public class VersionHelper {
     };
   }
 
-  public static VersionObj getLatestRemoteVersion() throws IOException {
+  public static VersionObj getLatestRemoteVersion(boolean includePrerelease) throws IOException {
     GitHub gh = GitHub.connectAnonymously();
-    List<GHRelease> releases = gh.getRepository("hizumiaoba/MineCraftTimeMachine").listReleases()
+    List<GHRelease> releases = gh.getRepository("hizumiaoba/MineCraftTimeMachine")
+      .listReleases()
+      .toList()
+      .parallelStream().filter(r -> includePrerelease || !r.isPrerelease())
       .toList();
     log.debug("Found {} releases", releases.size());
     log.trace("Latest release: {}", releases.get(0).getTagName());

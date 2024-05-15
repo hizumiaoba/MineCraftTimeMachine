@@ -15,7 +15,7 @@ public class FetchRemoteVersionTest {
   @Test
   public void test() {
     try {
-      VersionObj remote = VersionHelper.getLatestRemoteVersion();
+      VersionObj remote = VersionHelper.getLatestRemoteVersion(true);
       assertThat(remote).isNotNull();
     } catch (IOException e) {
       fail(e);
