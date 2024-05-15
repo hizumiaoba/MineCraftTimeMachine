@@ -38,6 +38,7 @@ public class VersionObj {
   }
 
   public String asStringNotation() {
-    return String.format("%d.%d.%d-%s", major, minor, patch, suffix.getSuffix());
+    return String.format("%d.%d.%d%s", major, minor, patch,
+      Suffix.NONE.equals(suffix) ? "" : "-" + suffix.getSuffix());
   }
 }
