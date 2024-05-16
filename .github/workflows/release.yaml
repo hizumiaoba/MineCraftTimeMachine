@@ -55,7 +55,7 @@ jobs:
         run: |
           LATEST_TAG=$(git describe --tags --abbrev=0)
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 $LATEST_TAG^)
-          CHANGES=$(git log $PREVIOUS_TAG..$LATEST_TAG --pretty=format:"%h - %s (%an)" --no-merges)
+          CHANGES=$(git log $PREVIOUS_TAG..$LATEST_TAG --pretty=format:"- %s (%an)" --no-merges)
           echo "LATEST_TAG=$LATEST_TAG"
           echo "PREVIOUS_TAG=$PREVIOUS_TAG"
           echo "CHANGES=$CHANGES"
