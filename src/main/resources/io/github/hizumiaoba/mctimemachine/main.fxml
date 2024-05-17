@@ -46,7 +46,7 @@
 <?import javafx.scene.text.Font?>
 <TabPane xmlns:fx="http://javafx.com/fxml/1" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
   minWidth="-Infinity" prefHeight="190.0" prefWidth="920.0" tabClosingPolicy="UNAVAILABLE"
-  xmlns="http://javafx.com/javafx/17.0.2-ea" fx:controller="io.github.hizumiaoba.mctimemachine.MainController"
+  xmlns="http://javafx.com/javafx/19" fx:controller="io.github.hizumiaoba.mctimemachine.MainController"
   fx:id="mainTabPane">
   <tabs>
     <Tab text="メインツール">
@@ -113,6 +113,9 @@
                                 mnemonicParsing="false" onAction="#onOpenRelatedFolderBtnClick"
                                 prefHeight="40.0" prefWidth="170.0"
                                 text="各種フォルダを開く" fx:id="openRelatedFolderBtn"/>
+                              <Button layoutX="215.0" layoutY="17.0" mnemonicParsing="false"
+                                onAction="#onCheckVersionUpdateBtnClick" prefHeight="40.0"
+                                prefWidth="170.0" text="アップデートを確認" fx:id="checkVersionUpdateBtn"/>
                            </children>
                            <padding>
                               <Insets left="20.0" />

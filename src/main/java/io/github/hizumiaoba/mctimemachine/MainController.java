@@ -24,14 +24,16 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
-import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -301,47 +303,50 @@ public class MainController {
 
   @FXML
   void onSelectBackupSavingFolderBtnClick() {
-      DirectoryChooser dc = new DirectoryChooser();
-      dc.setTitle("バックアップを保存するフォルダを選択してください。");
-      dc.setInitialDirectory(new File(System.getProperty("user.home")));
-      log.debug("awaiting for the user to select the backup saving folder.");
-      File f = dc.showDialog(null);
+    File f = openFileChooser("バックアップを保存するフォルダを選択してください。",
+        new File(System.getProperty("user.home")));
       if (f == null) {
-        log.debug("Got nothing.");
         return;
       }
-      log.debug("Got the folder: {}", f.getAbsolutePath());
-      backupSavingFolderPathField.setText(f.getAbsolutePath());
-  }
-
-  @FXML
-  void onSelectLauncherExeBtnClick() {
-      FileChooser fc = new FileChooser();
-      fc.setTitle("ランチャーの実行ファイルを選択してください。");
-      fc.setInitialDirectory(new File(System.getProperty("user.home")));
-      log.debug("awaiting for the user to select the executable file.");
-      File f = fc.showOpenDialog(null);
-      if (f == null) {
-        log.debug("Got nothing.");
-        return;
-      }
-      log.debug("Got the file: {}", f.getAbsolutePath());
-      launcherExePathField.setText(f.getAbsolutePath());
+    assignPath(backupSavingFolderPathField, f);
   }
 
   @FXML
   void onSelectSavesFolderBtnClick() {
-      DirectoryChooser dc = new DirectoryChooser();
-      dc.setTitle("\".minecraft/saves\"フォルダを選択してください。");
-      dc.setInitialDirectory(new File(System.getProperty("user.home")));
-      log.debug("awaiting for the user to select the saves folder.");
-      File f = dc.showDialog(null);
+    File f = openFileChooser("\".minecraft/saves\"フォルダを選択してください。",
+        new File(System.getProperty("user.home")));
       if (f == null) {
-        log.debug("Got nothing.");
         return;
       }
-      log.debug("Got the folder: {}", f.getAbsolutePath());
-      savesFolderPathField.setText(f.getAbsolutePath());
+    assignPath(savesFolderPathField, f);
+  }
+
+  @FXML
+  void onSelectLauncherExeBtnClick() {
+    File f = openFileChooser("ランチャーの実行ファイルを選択してください。",
+      new File(System.getProperty("user.home")));
+    if (f == null) {
+      return;
+    }
+    assignPath(launcherExePathField, f);
+  }
+
+  private File openFileChooser(String title, File initialDir) {
+    FileChooser fc = new FileChooser();
+    fc.setTitle(title);
+    fc.setInitialDirectory(initialDir);
+    log.debug("awaiting for the user to select the file.");
+    File f = fc.showOpenDialog(null);
+    if (f == null) {
+      log.debug("Got nothing.");
+      return null;
+    }
+    return f;
+  }
+
+  private void assignPath(TextField injected, File target) {
+    log.debug("injecting the path: {}", target.getAbsolutePath());
+    injected.setText(target.getAbsolutePath());
   }
 
   @FXML
@@ -389,6 +394,20 @@ public class MainController {
       });
       log.info("Special backup completed.");
     });
+  }
+
+  @FXML
+  private Button checkVersionUpdateBtn;
+
+  @FXML
+  void onCheckVersionUpdateBtnClick() throws IOException {
+    log.trace("Checking the latest version...");
+    // open new dialog with `update.fxml`
+    FXMLLoader loader = new FXMLLoader(
+      MineCraftTimeMachineApplication.class.getResource("update.fxml"));
+    Stage updateDialogStage = new Stage();
+    updateDialogStage.setScene(new Scene(loader.load()));
+    updateDialogStage.showAndWait();
   }
 
   private void runConcurrentTask(ExecutorService service, Runnable task) {
