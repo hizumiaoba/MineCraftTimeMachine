@@ -65,6 +65,7 @@ dependencies {
 
 tasks.shadowJar {
     minimize()
+    archiveFileName.set("${project.name}-all.jar")
 }
 
 tasks.withType<Test> {
