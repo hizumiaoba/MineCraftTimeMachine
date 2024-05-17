@@ -54,16 +54,11 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           dry_run: true
-      - name: Show release informations
+      - name: Show release information
         id: diff
         run: |
-          LATEST_TAG=$(git describe --tags --abbrev=0)
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $LATEST_TAG^)
-          CHANGES=$(git log $PREVIOUS_TAG..$LATEST_TAG --pretty=format:"- %s (%an)" --no-merges)
-          echo "LATEST_TAG=$LATEST_TAG"
-          echo "PREVIOUS_TAG=$PREVIOUS_TAG"
-          echo "CHANGES=$CHANGES"
-          echo "::set-output name=changelog::$CHANGES"
+          chmod +x ./release_check.sh
+          . release_check.sh
       - name: Create a github release
         id: create_release
         uses: actions/create-release@v1
