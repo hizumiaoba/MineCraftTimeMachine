@@ -10,7 +10,10 @@ on:
 jobs:
 
   compile:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v2
@@ -27,10 +30,11 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: |
-            shadowJar
+            build
             --scan
             --refresh-dependencies
             --no-build-cache
+            --rerun-tasks
 
   release:
 
