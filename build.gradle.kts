@@ -45,7 +45,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.3")
     implementation("com.google.guava:guava:33.0.0-jre")
     // https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
-    implementation("org.xerial:sqlite-jdbc:3.45.1.0")
+    implementation("org.xerial:sqlite-jdbc:3.45.3.0")
     implementation("org.projectlombok:lombok:${lombokVersion}")
     // https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api
     implementation("jakarta.annotation:jakarta.annotation-api:${jakartaVersion}")
