@@ -1,6 +1,8 @@
 package io.github.hizumiaoba.mctimemachine;
 
 import com.melloware.jintellitype.JIntellitype;
+import io.github.hizumiaoba.mctimemachine.api.Suffix;
+import io.github.hizumiaoba.mctimemachine.api.Version;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -10,6 +12,7 @@ import javafx.stage.WindowEvent;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Version(major = 0, minor = 3, patch = 0, suffix = Suffix.ALPHA)
 public class MineCraftTimeMachineApplication extends Application {
 
   @Override

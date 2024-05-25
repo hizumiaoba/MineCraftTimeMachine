@@ -2,10 +2,11 @@
 junit = "5.10.2"
 lombok = "1.18.32"
 jakarta = "3.0.0"
+jackson = "2.17.0"
 
 [libraries]
 logback = { group = "ch.qos.logback", name = "logback-classic", version = "1.5.6" }
-guava = { group = "com.google.guava", name = "guava", version = "33.1.0-jre" }
+guava = { group = "com.google.guava", name = "guava", version = "33.2.0-jre" }
 sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version = "3.45.3.0" }
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
 jakarta-annotation = { group = "jakarta.annotation", name = "jakarta.annotation-api", version.ref = "jakarta" }
@@ -13,13 +14,15 @@ jintelitype = { group = "com.melloware", name = "jintellitype", version = "1.4.1
 jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
 jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }
 truth = { group = "com.google.truth", name = "truth", version = "1.4.2" }
-kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version = "1.8.22" }
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version = "1.9.23" }
+gh-api = { group = "org.kohsuke", name = "github-api", version = "1.321" }
 
 [bundles]
 # except for engine dependency, which is only needed for running tests
 testlibs = ["jupiter-api", "truth"]
 # convenience bundle for annotationProcessor
 annotationProcess = ["lombok", "jakarta-annotation"]
+# convenience bundle for jackson libraries
 
 [plugins]
 jlink = { id = "org.beryx.jlink", version = "3.0.1" }

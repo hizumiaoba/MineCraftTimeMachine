@@ -24,6 +24,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Spinner;
@@ -31,6 +33,7 @@ import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -391,6 +394,20 @@ public class MainController {
       });
       log.info("Special backup completed.");
     });
+  }
+
+  @FXML
+  private Button checkVersionUpdateBtn;
+
+  @FXML
+  void onCheckVersionUpdateBtnClick() throws IOException {
+    log.trace("Checking the latest version...");
+    // open new dialog with `update.fxml`
+    FXMLLoader loader = new FXMLLoader(
+      MineCraftTimeMachineApplication.class.getResource("update.fxml"));
+    Stage updateDialogStage = new Stage();
+    updateDialogStage.setScene(new Scene(loader.load()));
+    updateDialogStage.showAndWait();
   }
 
   private void runConcurrentTask(ExecutorService service, Runnable task) {
