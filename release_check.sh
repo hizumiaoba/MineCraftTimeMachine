@@ -1,4 +1,3 @@
-#!/bin/bash
 LATEST_TAG=$(git describe --tags --abbrev=0)
 
 PREVIOUS_TAG_RAW=$(git describe --tags "$(git rev-list --tags --skip=1 --max-count=1)")
