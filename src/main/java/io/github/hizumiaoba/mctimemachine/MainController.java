@@ -223,7 +223,7 @@ public class MainController {
           () -> {
             log.trace("Backup scheduler is running.");
             onBackupNowBtnClick();
-          }, 0,
+          }, backupScheduleDurationSpinner.getValue(),
           backupScheduleDurationSpinner.getValue(), TimeUnit.MINUTES);
         Platform.runLater(() -> {
           backupScheduledBtn.setText("定期バックアップ中！");
