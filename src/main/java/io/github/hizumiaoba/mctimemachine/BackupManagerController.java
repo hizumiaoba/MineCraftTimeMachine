@@ -1,10 +1,12 @@
 package io.github.hizumiaoba.mctimemachine;
 
+import io.github.hizumiaoba.mctimemachine.api.BackupDirAttributes;
 import io.github.hizumiaoba.mctimemachine.api.ExceptionPopup;
 import io.github.hizumiaoba.mctimemachine.internal.fs.BackupUtils;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -41,6 +43,9 @@ public class BackupManagerController {
   @Setter
   private BackupUtils backupUtils;
 
+  @Setter
+  private Map<String, BackupDirAttributes> attributes;
+
   @FXML
   private void initialize() {
     log.info("BackupManagerController initialized.");
@@ -49,6 +54,20 @@ public class BackupManagerController {
       items = FXCollections.observableList(
         this.backupUtils.getBackupDirPaths().parallelStream().map(p -> p.getFileName().toString())
           .toList());
+      this.backupFolderListView.getSelectionModel().selectFirst();
+      this.backupFolderListView.getSelectionModel().selectedItemProperty().addListener(
+        (observable, before, after) -> {
+          BackupDirAttributes attr = this.attributes.get(after);
+          if (attr == null) {
+            log.warn("No attributes found for {}", after);
+            return;
+          }
+          this.textFieldBackupFolderName.setText(after);
+          this.labelBackupDateCreated.setText(attr.createdAt().toString());
+          this.labelBackupKind.setText(attr.isSpecial() ? "特別" : "通常");
+          this.labelBackupDataSize.setText(String.valueOf(attr.size()));
+          this.labelCountBackedupWorlds.setText(String.valueOf(attr.savedWorldCount()));
+        });
     } catch (IOException e) {
       log.error("Failed to get backup directory names", e);
       ExceptionPopup p = new ExceptionPopup(e, "バックアップフォルダ名の取得に失敗しました",
