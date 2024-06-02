@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -79,7 +78,7 @@ public class BackupManagerController {
   }
 
   @FXML
-  private void onDeleteButtonClicked(ActionEvent e) {
+  private void onDeleteButtonClicked() {
     List<Path> dirList;
     try {
       dirList = this.backupUtils.getBackupDirPaths();
@@ -111,7 +110,7 @@ public class BackupManagerController {
   }
 
   @FXML
-  private void onCopyDirectoryButtonClicked(ActionEvent e) {
+  private void onCopyDirectoryButtonClicked() {
     List<Path> dirList;
     try {
       dirList = this.backupUtils.getBackupDirPaths();
@@ -143,7 +142,7 @@ public class BackupManagerController {
   }
 
   @FXML
-  private void onCloseButtonClicked(ActionEvent e) {
+  private void onCloseButtonClicked() {
     log.info("Close button clicked.");
     Stage s = (Stage) this.backupFolderListView.getScene().getWindow();
     s.close();
