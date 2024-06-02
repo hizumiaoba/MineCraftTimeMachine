@@ -128,7 +128,7 @@ public class BackupUtils {
     log.debug("Backup directory is ready: {}", this.backupPath);
   }
 
-  public void duplicate(Path d) {
+  public void duplicate(Path d) throws IOException {
     log.info("Commencing duplication...");
     Path targetDir = this.backupPath.resolve(String.format("Copy of %s", d.getFileName()));
     try (Stream<Path> s = Files.walk(d).parallel()) {
@@ -141,8 +141,6 @@ public class BackupUtils {
           log.error("Failed to copy file: {}", source, e);
         }
       });
-    } catch (IOException e) {
-      log.error("Failed to duplicate backup: {}", d, e);
     }
   }
 }
