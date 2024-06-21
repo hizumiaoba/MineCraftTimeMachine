@@ -28,7 +28,7 @@
                 <Font name="Yu Gothic Medium" size="15.0" />
               </font>
             </Label>
-            <Label fx:id="labelBackupKind" layoutX="25.0" layoutY="162.0" text="その他">
+            <Label fx:id="labelBackupDateCreated" layoutX="25.0" layoutY="94.0" text="Date of Created">
               <font>
                 <Font name="Yu Gothic Medium" size="15.0" />
               </font>
@@ -38,7 +38,7 @@
                 <Font name="Yu Gothic Medium" size="15.0" />
               </font>
             </Label>
-            <Label fx:id="labelBackupDataSize" layoutX="25.0" layoutY="230.0" text="Size of Data">
+            <Label fx:id="labelBackupKind" layoutX="25.0" layoutY="162.0" text="その他">
               <font>
                 <Font name="Yu Gothic Medium" size="15.0" />
               </font>
@@ -48,7 +48,7 @@
                 <Font name="Yu Gothic Medium" size="15.0" />
               </font>
             </Label>
-            <Label fx:id="labelCountBackedupWorlds" layoutX="25.0" layoutY="298.0" text="Count of Worlds">
+            <Label fx:id="labelBackupDataSize" layoutX="25.0" layoutY="230.0" text="Size of Data">
               <font>
                 <Font name="Yu Gothic Medium" size="15.0" />
               </font>
@@ -58,7 +58,7 @@
                 <Font name="Yu Gothic Medium" size="15.0" />
               </font>
             </Label>
-            <Label fx:id="labelBackupDateCreated" layoutX="25.0" layoutY="94.0" text="Date of Created">
+            <Label fx:id="labelCountBackedupWorlds" layoutX="25.0" layoutY="298.0" text="Count of Worlds">
               <font>
                 <Font name="Yu Gothic Medium" size="15.0" />
               </font>
