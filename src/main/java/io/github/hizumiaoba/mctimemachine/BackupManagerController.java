@@ -54,14 +54,7 @@ public class BackupManagerController {
         BackupDirAttributes attr;
         try (Stream<Path> list = Files.list(p)) {
           attr = new BackupDirAttributes(
-            Files.list(p).map(path -> {
-              try {
-                return Files.size(path);
-              } catch (IOException e) {
-                log.warn("Failed to get size of {}", path.getFileName(), e);
-              }
-              return 0L;
-            }).reduce(0L, Long::sum),
+            calculateSizeRecursively(p),
             p.getFileName().toString().startsWith("Sp_"),
             Files.readAttributes(p, BasicFileAttributes.class).creationTime(),
             (int) list.filter(Files::isDirectory).count()
@@ -74,6 +67,23 @@ public class BackupManagerController {
       });
     }
     return attributes;
+  }
+
+  private static long calculateSizeRecursively(Path p) {
+    long size = 0;
+    try (Stream<Path> s = Files.list(p)) {
+      size = s.map(path -> {
+        try {
+          return Files.isDirectory(path) ? calculateSizeRecursively(path) : Files.size(path);
+        } catch (IOException e) {
+          log.warn("Failed to get size of {}", path.getFileName(), e);
+        }
+        return 0L;
+      }).reduce(0L, Long::sum);
+    } catch (IOException e) {
+      log.warn("Failed to calculate size of {}", p.getFileName(), e);
+    }
+    return size;
   }
 
   @FXML
