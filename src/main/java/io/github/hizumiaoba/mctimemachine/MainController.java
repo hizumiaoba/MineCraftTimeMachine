@@ -34,7 +34,6 @@ import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -118,8 +117,7 @@ public class MainController {
   private static final ScheduledExecutorService backupSchedulerExecutors;
   private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
   private static ScheduledFuture<?> backupScheduledFuture;
-  @Getter
-  private BackupUtils backupUtils;
+  static BackupUtils backupUtils;
 
   static {
     es = Executors.newCachedThreadPool(new ConcurrentThreadFactory("Main GUI", "Controller", true));
@@ -173,10 +171,10 @@ public class MainController {
   }
 
   private void checkPath() {
-    if (!this.backupUtils.getBackupPath()
+    if (!backupUtils.getBackupPath()
       .equals(Paths.get(this.backupSavingFolderPathField.getText()))) {
       log.debug("Backup path has been changed.");
-      this.backupUtils.setBackupPath(this.backupSavingFolderPathField.getText());
+      backupUtils.setBackupPath(this.backupSavingFolderPathField.getText());
     }
   }
 
@@ -192,9 +190,9 @@ public class MainController {
         specialBackupNowWithShortcutChkbox.setDisable(true);
       });
       checkPath();
-      this.backupUtils.createBackupDir();
+      backupUtils.createBackupDir();
       try {
-        this.backupUtils.backup(Paths.get(
+        backupUtils.backup(Paths.get(
             savesFolderPathField.getText()),
           false,
           backupCountSpinner.getValue());
@@ -216,7 +214,7 @@ public class MainController {
   void onBackupScheduledBtnClick() {
     runConcurrentTask(es, () -> {
       checkPath();
-      this.backupUtils.createBackupDir();
+      backupUtils.createBackupDir();
       if (backupScheduledFuture == null) {
         log.trace("Guessed that the backup scheduler is not running.");
         backupScheduledFuture = backupSchedulerExecutors.scheduleAtFixedRate(
@@ -245,8 +243,14 @@ public class MainController {
   }
 
   @FXML
-  void onOpenBackupListBtnClick() {
-    System.out.println("Open Backup List button clicked");
+  void onOpenBackupListBtnClick() throws IOException {
+    log.trace("Opening the backup list.");
+    // open new dialog with `manager.fxml`
+    FXMLLoader loader = new FXMLLoader(
+      MineCraftTimeMachineApplication.class.getResource("manager.fxml"));
+    Stage managerDialogStage = new Stage();
+    managerDialogStage.setScene(new Scene(loader.load()));
+    managerDialogStage.showAndWait();
   }
 
   @FXML
@@ -374,10 +378,10 @@ public class MainController {
         specialBackupNowWithShortcutChkbox.setDisable(true);
       });
       checkPath();
-      this.backupUtils.createBackupDir();
+      backupUtils.createBackupDir();
       log.info("Starting special backup...");
       try {
-        this.backupUtils.backup(
+        backupUtils.backup(
           Paths.get(savesFolderPathField.getText()),
           true,
           backupCountSpinner.getValue());
