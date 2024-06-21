@@ -62,7 +62,7 @@ public class BackupManagerController {
               }
               return 0L;
             }).reduce(0L, Long::sum),
-            p.getFileName().startsWith("Sp_"),
+            p.getFileName().toString().startsWith("Sp_"),
             Files.readAttributes(p, BasicFileAttributes.class).creationTime(),
             (int) list.filter(Files::isDirectory).count()
           );
