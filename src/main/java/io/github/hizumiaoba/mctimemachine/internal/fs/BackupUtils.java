@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -125,5 +126,21 @@ public class BackupUtils {
       log.error("Failed to create backup directory: {}", this.backupPath, e);
     }
     log.debug("Backup directory is ready: {}", this.backupPath);
+  }
+
+  public void duplicate(Path d) throws IOException {
+    log.info("Commencing duplication...");
+    Path targetDir = this.backupPath.resolve(String.format("Copy of %s", d.getFileName()));
+    try (Stream<Path> s = Files.walk(d).parallel()) {
+      s.forEach(source -> {
+        Path target = targetDir.resolve(d.relativize(source));
+        try {
+          Files.createDirectories(target.getParent());
+          Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+          log.error("Failed to copy file: {}", source, e);
+        }
+      });
+    }
   }
 }
