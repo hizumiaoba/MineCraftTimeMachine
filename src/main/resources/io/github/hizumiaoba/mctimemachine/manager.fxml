@@ -22,7 +22,7 @@
                 <Font name="Yu Gothic Medium" size="15.0" />
               </font>
             </Label>
-            <TextField fx:id="textFieldBackupFolderName" />
+            <TextField fx:id="textFieldBackupFolderName" editable="false"/>
             <Label layoutX="25.0" layoutY="20.0" text="作成日時">
               <font>
                 <Font name="Yu Gothic Medium" size="15.0" />
