@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.hizumiaoba.mctimemachine.BackupManagerController">
+  <children>
+    <HBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <children>
+        <ListView fx:id="backupFolderListView" prefHeight="400.0" prefWidth="280.0" />
+        <VBox prefHeight="200.0" prefWidth="100.0" spacing="15.0" HBox.hgrow="ALWAYS">
+          <children>
+            <Label text="フォルダ名">
+              <font>
+                <Font name="Yu Gothic Medium" size="15.0" />
+              </font>
+            </Label>
+            <TextField fx:id="textFieldBackupFolderName" editable="false"/>
+            <Label layoutX="25.0" layoutY="20.0" text="作成日時">
+              <font>
+                <Font name="Yu Gothic Medium" size="15.0" />
+              </font>
+            </Label>
+            <Label fx:id="labelBackupDateCreated" layoutX="25.0" layoutY="94.0" text="Date of Created">
+              <font>
+                <Font name="Yu Gothic Medium" size="15.0" />
+              </font>
+            </Label>
+            <Label layoutX="25.0" layoutY="128.0" text="バックアップ種類">
+              <font>
+                <Font name="Yu Gothic Medium" size="15.0" />
+              </font>
+            </Label>
+            <Label fx:id="labelBackupKind" layoutX="25.0" layoutY="162.0" text="その他">
+              <font>
+                <Font name="Yu Gothic Medium" size="15.0" />
+              </font>
+            </Label>
+            <Label layoutX="25.0" layoutY="196.0" text="データサイズ">
+              <font>
+                <Font name="Yu Gothic Medium" size="15.0" />
+              </font>
+            </Label>
+            <Label fx:id="labelBackupDataSize" layoutX="25.0" layoutY="230.0" text="Size of Data">
+              <font>
+                <Font name="Yu Gothic Medium" size="15.0" />
+              </font>
+            </Label>
+            <Label layoutX="25.0" layoutY="264.0" text="保存されているワールド数">
+              <font>
+                <Font name="Yu Gothic Medium" size="15.0" />
+              </font>
+            </Label>
+            <Label fx:id="labelCountBackedupWorlds" layoutX="25.0" layoutY="298.0" text="Count of Worlds">
+              <font>
+                <Font name="Yu Gothic Medium" size="15.0" />
+              </font>
+            </Label>
+            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0" VBox.vgrow="ALWAYS">
+              <children>
+                <Button mnemonicParsing="false" onAction="#onDeleteButtonClicked" text="削除" />
+                <Button mnemonicParsing="false" onAction="#onCopyDirectoryButtonClicked" text="コピー" />
+                <Button disable="true" mnemonicParsing="false" text="復元" />
+                <Button mnemonicParsing="false" onAction="#onCloseButtonClicked" text="閉じる" />
+              </children>
+            </HBox>
+          </children>
+          <padding>
+            <Insets bottom="5.0" left="15.0" right="15.0" top="10.0" />
+          </padding>
+        </VBox>
+      </children>
+    </HBox>
+  </children>
+</AnchorPane>

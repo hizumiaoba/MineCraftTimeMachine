@@ -9,6 +9,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -125,5 +128,39 @@ public class BackupUtils {
       log.error("Failed to create backup directory: {}", this.backupPath, e);
     }
     log.debug("Backup directory is ready: {}", this.backupPath);
+  }
+
+  public void duplicate(Path d) throws IOException {
+    log.info("Commencing duplication...");
+    Path targetDir = this.backupPath.resolve(String.format("Copy of %s", d.getFileName()));
+    try (Stream<Path> s = Files.walk(d).parallel()) {
+      s.forEach(source -> {
+        Path target = targetDir.resolve(d.relativize(source));
+        try {
+          Files.createDirectories(target.getParent());
+          Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+          log.error("Failed to copy file: {}", source, e);
+        }
+      });
+    }
+  }
+
+  public void archive(Path targetDir) throws IOException {
+    // create zip archive of the directory `p` and save it to `targetDir`
+    Path zip = targetDir.resolve(this.backupPath.getFileName().toString() + ".zip");
+    try (var zos = new ZipOutputStream(Files.newOutputStream(zip))) {
+      try (var s = Files.walk(this.backupPath)) {
+        s.forEach(path -> {
+          try {
+            zos.putNextEntry(new ZipEntry(this.backupPath.relativize(path).toString()));
+            Files.copy(path, zos);
+            zos.closeEntry();
+          } catch (IOException e) {
+            log.error("Failed to archive file: {}", path, e);
+          }
+        });
+      }
+    }
   }
 }
