@@ -33,6 +33,7 @@ import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -250,6 +251,7 @@ public class MainController {
       MineCraftTimeMachineApplication.class.getResource("manager.fxml"));
     Stage managerDialogStage = new Stage();
     managerDialogStage.setScene(new Scene(loader.load()));
+    managerDialogStage.initModality(Modality.APPLICATION_MODAL);
     managerDialogStage.showAndWait();
   }
 
@@ -411,6 +413,7 @@ public class MainController {
       MineCraftTimeMachineApplication.class.getResource("update.fxml"));
     Stage updateDialogStage = new Stage();
     updateDialogStage.setScene(new Scene(loader.load()));
+    updateDialogStage.initModality(Modality.APPLICATION_MODAL);
     updateDialogStage.showAndWait();
   }
 
