@@ -9,7 +9,6 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.hizumiaoba.mctimemachine.BackupManagerController">
   <children>
     <HBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -65,8 +64,8 @@
             </Label>
             <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="10.0" VBox.vgrow="ALWAYS">
               <children>
-                <Button mnemonicParsing="false" onAction="#onDeleteButtonClicked" text="削除" />
-                <Button mnemonicParsing="false" onAction="#onCopyDirectoryButtonClicked" text="コピー" />
+                <Button disable="true" mnemonicParsing="false" onAction="#onDeleteButtonClicked" text="削除" />
+                <Button disable="true" mnemonicParsing="false" onAction="#onCopyDirectoryButtonClicked" text="コピー" />
                 <Button disable="true" mnemonicParsing="false" text="復元" />
                 <Button mnemonicParsing="false" onAction="#onCloseButtonClicked" text="閉じる" />
               </children>
