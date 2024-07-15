@@ -13,7 +13,7 @@ jakarta-annotation = { group = "jakarta.annotation", name = "jakarta.annotation-
 jintelitype = { group = "com.melloware", name = "jintellitype", version = "1.4.1" }
 jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
 jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }
-truth = { group = "com.google.truth", name = "truth", version = "1.4.2" }
+truth = { group = "com.google.truth", name = "truth", version = "1.4.4" }
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version = "2.0.0" }
 gh-api = { group = "org.kohsuke", name = "github-api", version = "1.322" }
 
