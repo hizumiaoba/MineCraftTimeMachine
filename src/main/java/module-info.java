@@ -3,6 +3,7 @@ module io.github.hizumiaoba.mctimemachine {
   requires javafx.fxml;
   requires kotlin.stdlib;
   requires java.desktop;
+  requires java.security.sasl;
   requires org.xerial.sqlitejdbc;
   requires org.slf4j;
   requires ch.qos.logback.classic;
