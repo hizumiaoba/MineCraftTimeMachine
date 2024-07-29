@@ -52,6 +52,7 @@ dependencies {
     // https://mvnrepository.com/artifact/com.melloware/jintellitype
     implementation(libs.jintelitype)
     implementation(libs.gh.api)
+    implementation(libs.okhttp)
 
 
     // test dependencies

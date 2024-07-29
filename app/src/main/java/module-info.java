@@ -12,6 +12,8 @@ module io.github.hizumiaoba.mctimemachine {
   requires annotations;
   requires jintellitype;
   requires org.kohsuke.github.api;
+  requires org.apache.commons.lang3;
+  requires okhttp3;
   requires com.fasterxml.jackson.core;
   requires com.fasterxml.jackson.databind;
 
