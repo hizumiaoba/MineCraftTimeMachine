@@ -41,5 +41,5 @@ bin/
 ### Mac OS ###
 .DS_Store
 /.idea/
-/application.properties
-/log-*/
+application.properties
+log-*/
