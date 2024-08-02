@@ -50,14 +50,15 @@ public class UpdateDialogController {
       } else {
         log.info("Client is outdated.");
       }
+      labelUpdateMessage.setText(helper.constructUpdateMessage(remoteLatest, false));
     } catch (IOException e) {
       ExceptionPopup p = new ExceptionPopup(e, "最新バージョンを取得できませんでした。",
         "UpdateDialogController#onCheckUpdateBtnClick");
       p.pop();
+      labelUpdateMessage.setText("最新バージョンの取得に失敗しました。");
     } finally {
       chkIncludePrerelease.setDisable(false);
       updateProgressBar.setProgress(1.0);
-      labelUpdateMessage.setText(helper.constructUpdateMessage(remoteLatest, false));
     }
   }
 
