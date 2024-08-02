@@ -3,11 +3,23 @@ package io.github.hizumiaoba.mctimemachine.internal.version;
 import io.github.hizumiaoba.mctimemachine.MineCraftTimeMachineApplication;
 import io.github.hizumiaoba.mctimemachine.api.Version;
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.List;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
+import okhttp3.OkHttpClient.Builder;
 import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GitHub;
+import org.kohsuke.github.GitHubBuilder;
+import org.kohsuke.github.extras.okhttp3.OkHttpGitHubConnector;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -39,7 +51,10 @@ public class VersionHelper {
   }
 
   public static VersionObj getLatestRemoteVersion(boolean includePrerelease) throws IOException {
-    GitHub gh = GitHub.connectAnonymously();
+    final OkHttpClient client = createUnsafeOkHttpClient();
+    GitHub gh = GitHubBuilder.fromEnvironment()
+      .withConnector(new OkHttpGitHubConnector(client))
+      .build();
     List<GHRelease> releases = gh.getRepository("hizumiaoba/MineCraftTimeMachine")
       .listReleases()
       .toList()
@@ -75,5 +90,39 @@ public class VersionHelper {
       default ->
         "更新の種類を特定できません。直接アップデートを確認してください。" + clientVersionNotice;
     };
+  }
+
+  /**
+   * Create OkHttpClient that ignores All SSL Certificates.
+   * This should be used only for interacting with GitHub API and should not be used for general.
+   * <p>
+   * This method is workaround for issue
+   * <a href="https://github.com/hizumiaoba/MineCraftTimeMachine/issues/89">#89</a>
+   * @return {@link OkHttpClient} instance that ignores all SSL Certificates.
+   */
+  private static OkHttpClient createUnsafeOkHttpClient() {
+    try {
+      final X509TrustManager trustAllCerts = new X509TrustManager() {
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType) {}
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType) {}
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+          return new X509Certificate[]{};
+        }
+      };
+      final SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+      sslContext.init(null, new TrustManager[] { trustAllCerts }, new SecureRandom());
+      final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+      OkHttpClient.Builder builder = new Builder();
+      builder.sslSocketFactory(sslSocketFactory, trustAllCerts);
+      builder.hostnameVerifier((hostname, session) -> true);
+      return builder.build();
+    } catch (NoSuchAlgorithmException | KeyManagementException e) {
+      log.warn("Failed to create unsafe OkHttpClient. Fallback to default OkHttpClient.");
+      log.warn("This will cause SSLHandShakeException during interacting with GitHub API.", e);
+      return new OkHttpClient();
+    }
   }
 }
