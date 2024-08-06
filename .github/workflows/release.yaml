@@ -54,10 +54,10 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           dry_run: true
+      - run: chmod +x release_check.sh
       - name: Show release information
         id: diff
         run: |
-          chmod +x ./release_check.sh
           . release_check.sh
       - name: Create a github release
         id: create_release
@@ -93,14 +93,16 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: |
-            shadowJar
+            jpackage
             --stacktrace
+      - name: compress package
+        run: tar -czvf app/build/jpackage/MinecraftTimeMachine-linux.zip app/build/jpackage/MinecraftTimeMachine/*
       - name: upload artifact
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.release.outputs.create_release.outputs.upload_url }}
-          asset_path: build/libs/mctimemachine-all.jar
-          asset_name: MinecraftTimeMachine-${{ github.ref }}-executable.jar
-          asset-content-type: application/java-archive
+          asset_path: app/build/jpackage/MinecraftTimeMachine-linux.zip
+          asset_name: MinecraftTimeMachine-${{ github.ref }}-linux.zip
+          asset-content-type: application/zip
