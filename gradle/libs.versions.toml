@@ -14,7 +14,7 @@ jintelitype = { group = "com.melloware", name = "jintellitype", version = "1.4.1
 jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
 jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }
 truth = { group = "com.google.truth", name = "truth", version = "1.4.4" }
-kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version = "2.0.0" }
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version = "2.0.10" }
 gh-api = { group = "org.kohsuke", name = "github-api", version = "1.323" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "4.12.0" }
 
