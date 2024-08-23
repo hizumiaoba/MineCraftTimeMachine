@@ -13,11 +13,12 @@ import java.util.stream.Stream;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javax.swing.JOptionPane;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -165,9 +166,14 @@ public class BackupManagerController {
     log.trace("Got selected item: {}",
       this.backupFolderListView.getSelectionModel().getSelectedItem());
     log.trace("Got backup folder list: {}", this.backupFolderListView.getItems());
-    JOptionPane.showMessageDialog(null,
-      "バックアップフォルダが見つかりませんでした。選択されていないか、内部でエラーが発生している可能性があります。",
-      "エラー", JOptionPane.ERROR_MESSAGE);
+
+    Alert notFoundAlert = new Alert(Alert.AlertType.ERROR);
+    notFoundAlert.setTitle("エラー");
+    notFoundAlert.setHeaderText("バックアップフォルダが見つかりませんでした");
+    notFoundAlert.setContentText("バックアップフォルダが選択されていないか、内部でエラーが発生している可能性があります。"
+      + "\n設定タブを確認し、正しく選択出来ている場合は開発者に報告してください。");
+    notFoundAlert.initModality(Modality.APPLICATION_MODAL);
+    notFoundAlert.showAndWait();
   }
 
   @FXML

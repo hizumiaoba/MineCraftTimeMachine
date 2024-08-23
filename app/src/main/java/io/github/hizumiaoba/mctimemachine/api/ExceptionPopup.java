@@ -1,15 +1,20 @@
 package io.github.hizumiaoba.mctimemachine.api;
 
-import javax.swing.JOptionPane;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ExceptionPopup {
 
+  private static final ButtonType FORCE_EXIT = new ButtonType("強制終了");
+  private static final ButtonType CONTINUE_ACTION = new ButtonType("続行");
   private final Throwable thrown;
   private final String message;
   private final String occurence;
-  private static final String messageSkeleton = "例外：%s が %s を処理中に発生しました。\n\n%s";
+  private static final String messageSkeleton = "例外：%s が %s を処理中に発生しました。";
 
 
   public ExceptionPopup(Throwable thrown, String message, String occurence) {
@@ -19,28 +24,29 @@ public class ExceptionPopup {
   }
 
   public void pop() {
-    if (isContinuable()) {
-      log();
-    } else {
-      forceExit();
-    }
+    Platform.runLater(() -> {
+      if (isContinuable()) {
+        log();
+      } else {
+        forceExit();
+      }
+    });
   }
 
-  private int show() {
-    return JOptionPane.showOptionDialog(
-      null,
-      String.format(messageSkeleton, thrown.getClass().getName(), occurence, message),
-      String.format("%s を処理中に例外が発生しました", occurence),
-      JOptionPane.YES_NO_OPTION,
-      JOptionPane.ERROR_MESSAGE,
-      null,
-      new String[] { "続行", "強制終了" },
-      "強制終了"
+  private ButtonType show() {
+    Alert alert = new Alert((AlertType.ERROR));
+    alert.setTitle(String.format("%s を処理中に例外が発生しました", occurence));
+    alert.setHeaderText(String.format(messageSkeleton, thrown.getClass().getName(), occurence));
+    alert.setContentText(message);
+    alert.getButtonTypes().setAll(
+      CONTINUE_ACTION,
+      FORCE_EXIT
     );
+    return alert.showAndWait().orElse(FORCE_EXIT);
   }
 
   private boolean isContinuable() {
-    return show() == JOptionPane.YES_OPTION;
+    return show().getText().equals("続行");
   }
 
   private void forceExit() {
