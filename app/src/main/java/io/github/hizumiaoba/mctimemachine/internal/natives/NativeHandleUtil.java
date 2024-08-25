@@ -28,6 +28,7 @@ public class NativeHandleUtil {
       log.warn("No process id will be returned");
       return Optional.empty();
     }
+    log.trace("Found Minecraft process id: {}", lines.get(0));
     return ProcessHandle.of(Long.parseLong(lines.get(0)));
   }
 }
