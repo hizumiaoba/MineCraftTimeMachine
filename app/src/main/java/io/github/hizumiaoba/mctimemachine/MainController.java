@@ -300,11 +300,12 @@ public class MainController {
       try {
         Runtime.getRuntime().exec(launcherExePathField.getText());
         if(enableAutoExitOnQuittingGamesChkbox.isSelected()) {
+          boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
           log.debug("Scheduling to kill the program after 3 minutes.");
           Executors
             .newSingleThreadScheduledExecutor(new ConcurrentThreadFactory("MainController", "process-killer-scheduled", true))
             .schedule(() -> {
-              Optional<ProcessHandle> handle = NativeHandleUtil.getMinecraftProcessId();
+              Optional<ProcessHandle> handle = isWindows ? NativeHandleUtil.getMinecraftProcessId() : NativeHandleUtil.getMinecraftProcess();
               handle.ifPresentOrElse(h -> {
                 log.debug("scheduling to kill the program");
                 h.onExit().thenRun(() -> System.exit(0));
