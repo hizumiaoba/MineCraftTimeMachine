@@ -29,7 +29,8 @@ public class ApplicationConfig implements Config {
       "backup_schedule_duration", "20",
       "backup_count", "5",
       "normal_backup_on_shortcut", "true",
-      "special_backup_on_shortcut", "true"
+      "special_backup_on_shortcut", "true",
+      "exit_on_quitting_minecraft", "false"
     );
   }
 
@@ -42,8 +43,25 @@ public class ApplicationConfig implements Config {
       return instances.get(configFile);
     } else {
       ApplicationConfig instance = new ApplicationConfig(configFile);
+      updateConfigSkeleton(instance);
       instances.put(configFile, instance);
       return instance;
+    }
+  }
+
+  /**
+   * Update current config when there is update in default config skeleton
+   * <p>
+   * This is only for migration from old version to new version
+   *
+   * @param instance current config instance
+   */
+  private static void updateConfigSkeleton(Config instance) {
+    instance.load();
+    for(Map.Entry<String, String> entry : defaultConfigSkeleton.entrySet()) {
+      if(instance.load(entry.getKey()) == null) {
+        instance.set(entry.getKey(), entry.getValue());
+      }
     }
   }
 
