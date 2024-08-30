@@ -23,4 +23,13 @@ public class NativeHandleTest {
     );
   }
 
+  @Test
+  @Disabled("This test is already completed under development environment")
+  public void onExitEventSettingTest() {
+    Optional<ProcessHandle> mcProcess = NativeHandleUtil.getMinecraftProcessId();
+    mcProcess.ifPresentOrElse(
+      handle -> handle.onExit().thenRun(() -> assertThat(true).isTrue()).join(),
+      () -> fail("Failed to get Minecraft process id")
+    );
+  }
 }
