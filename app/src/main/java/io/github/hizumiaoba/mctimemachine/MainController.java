@@ -9,6 +9,7 @@ import io.github.hizumiaoba.mctimemachine.api.Version;
 import io.github.hizumiaoba.mctimemachine.internal.ApplicationConfig;
 import io.github.hizumiaoba.mctimemachine.internal.concurrent.ConcurrentThreadFactory;
 import io.github.hizumiaoba.mctimemachine.internal.fs.BackupUtils;
+import io.github.hizumiaoba.mctimemachine.internal.natives.NativeHandleUtil;
 import io.github.hizumiaoba.mctimemachine.internal.version.VersionObj;
 import java.awt.Desktop;
 import java.io.File;
@@ -17,6 +18,7 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -286,6 +288,15 @@ public class MainController {
       log.trace("launcher path: {}", launcherExePathField.getText());
       try {
         Runtime.getRuntime().exec(launcherExePathField.getText());
+        Executors
+          .newSingleThreadScheduledExecutor(new ConcurrentThreadFactory("MainController", "process-killer-scheduled", true))
+          .schedule(() -> {
+            Optional<ProcessHandle> handle = NativeHandleUtil.getMinecraftProcessId();
+            handle.ifPresentOrElse(h -> {
+              log.debug("scheduling to kill the program");
+              h.onExit().thenRun(() -> System.exit(0));
+            }, () -> log.warn("No Minecraft process was found."));
+          }, 3, TimeUnit.MINUTES);
       } catch (IOException e) {
         ExceptionPopup popup = new ExceptionPopup(e, "外部プロセスを開始できませんでした。", "MainController#onOpenLauncherBtnClick()$lambda");
         popup.pop();
