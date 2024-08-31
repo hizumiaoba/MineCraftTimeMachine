@@ -9,6 +9,7 @@ import io.github.hizumiaoba.mctimemachine.api.Version;
 import io.github.hizumiaoba.mctimemachine.internal.ApplicationConfig;
 import io.github.hizumiaoba.mctimemachine.internal.concurrent.ConcurrentThreadFactory;
 import io.github.hizumiaoba.mctimemachine.internal.fs.BackupUtils;
+import io.github.hizumiaoba.mctimemachine.internal.natives.NativeHandleUtil;
 import io.github.hizumiaoba.mctimemachine.internal.version.VersionObj;
 import java.awt.Desktop;
 import java.io.File;
@@ -17,6 +18,7 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,6 +39,7 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -116,6 +119,9 @@ public class MainController {
   @FXML
   private TabPane mainTabPane;
 
+  @FXML
+  public CheckBox enableAutoExitOnQuittingGamesChkbox;
+
   private Config mainConfig;
   private static final ExecutorService es;
   private static final ThreadFactory internalControllerThreadFactory = new ConcurrentThreadFactory(
@@ -145,6 +151,8 @@ public class MainController {
         backupNowWithShortcutChkbox.isSelected() ? "true" : "false");
       mainConfig.set("special_backup_on_shortcut",
         specialBackupNowWithShortcutChkbox.isSelected() ? "true" : "false");
+      mainConfig.set("exit_on_quitting_minecraft",
+        enableAutoExitOnQuittingGamesChkbox.isSelected() ? "true" : "false");
       mainConfig.save();
       es.shutdownNow();
       backupSchedulerExecutors.shutdownNow();
@@ -173,6 +181,11 @@ public class MainController {
       Boolean.parseBoolean(mainConfig.load("normal_backup_on_shortcut")));
     specialBackupNowWithShortcutChkbox.setSelected(
       Boolean.parseBoolean(mainConfig.load("special_backup_on_shortcut")));
+    enableAutoExitOnQuittingGamesChkbox.setSelected(
+      Boolean.parseBoolean(mainConfig.load("exit_on_quitting_minecraft")));
+    Tooltip backupNowTooltip = new Tooltip("ランチャーをここから起動した際、Minecraft終了を自動で検知してこのアプリを終了します。");
+    backupNowTooltip.setStyle("-fx-font-size: 12px;");
+    enableAutoExitOnQuittingGamesChkbox.setTooltip(backupNowTooltip);
     backupUtils = new BackupUtils(backupSavingFolderPathField.getText());
   }
 
@@ -286,6 +299,19 @@ public class MainController {
       log.trace("launcher path: {}", launcherExePathField.getText());
       try {
         Runtime.getRuntime().exec(launcherExePathField.getText());
+        if(enableAutoExitOnQuittingGamesChkbox.isSelected()) {
+          boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
+          log.debug("Scheduling to kill the program after 3 minutes.");
+          Executors
+            .newSingleThreadScheduledExecutor(new ConcurrentThreadFactory("MainController", "process-killer-scheduled", true))
+            .schedule(() -> {
+              Optional<ProcessHandle> handle = isWindows ? NativeHandleUtil.getMinecraftProcessId() : NativeHandleUtil.getMinecraftProcess();
+              handle.ifPresentOrElse(h -> {
+                log.debug("scheduling to kill the program");
+                h.onExit().thenRun(() -> System.exit(0));
+              }, () -> log.warn("No Minecraft process was found."));
+            }, 3, TimeUnit.MINUTES);
+        }
       } catch (IOException e) {
         ExceptionPopup popup = new ExceptionPopup(e, "外部プロセスを開始できませんでした。", "MainController#onOpenLauncherBtnClick()$lambda");
         popup.pop();
