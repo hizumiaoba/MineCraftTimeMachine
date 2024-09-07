@@ -30,7 +30,8 @@ public class ApplicationConfig implements Config {
       "backup_count", "5",
       "normal_backup_on_shortcut", "true",
       "special_backup_on_shortcut", "true",
-      "exit_on_quitting_minecraft", "false"
+      "exit_on_quitting_minecraft", "false",
+      "backup_on_quitting_minecraft", "false"
     );
   }
 

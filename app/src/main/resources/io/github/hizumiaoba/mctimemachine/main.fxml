@@ -158,6 +158,7 @@
                               <Label layoutX="10.0" layoutY="10.0" text="自動バックアップ間隔（分）" />
                               <Spinner fx:id="backupScheduleDurationSpinner" editable="true" layoutX="38.0" layoutY="10.0" prefHeight="25.0" prefWidth="70.0" />
                               <CheckBox fx:id="enableAutoExitOnQuittingGamesChkbox" mnemonicParsing="false" text="自動で終了する" />
+                              <CheckBox fx:id="enableAutoBackupOnQuittingGamesChkbox" layoutX="514.0" layoutY="27.0" mnemonicParsing="false" text="自動でバックアップする" />
                            </children>
                            <padding>
                               <Insets left="20.0" />
