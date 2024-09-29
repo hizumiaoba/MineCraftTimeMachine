@@ -26,6 +26,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -120,7 +121,10 @@ public class MainController {
   private TabPane mainTabPane;
 
   @FXML
-  public CheckBox enableAutoExitOnQuittingGamesChkbox;
+  private CheckBox enableAutoExitOnQuittingGamesChkbox;
+
+  @FXML
+  private CheckBox enableAutoBackupOnQuittingGamesChkbox;
 
   private Config mainConfig;
   private static final ExecutorService es;
@@ -153,6 +157,8 @@ public class MainController {
         specialBackupNowWithShortcutChkbox.isSelected() ? "true" : "false");
       mainConfig.set("exit_on_quitting_minecraft",
         enableAutoExitOnQuittingGamesChkbox.isSelected() ? "true" : "false");
+      mainConfig.set("exit_on_quitting_minecraft",
+        enableAutoBackupOnQuittingGamesChkbox.isSelected() ? "true" : "false");
       mainConfig.save();
       es.shutdownNow();
       backupSchedulerExecutors.shutdownNow();
@@ -186,6 +192,11 @@ public class MainController {
     Tooltip backupNowTooltip = new Tooltip("ランチャーをここから起動した際、Minecraft終了を自動で検知してこのアプリを終了します。");
     backupNowTooltip.setStyle("-fx-font-size: 12px;");
     enableAutoExitOnQuittingGamesChkbox.setTooltip(backupNowTooltip);
+    enableAutoBackupOnQuittingGamesChkbox.setSelected(
+      Boolean.parseBoolean(mainConfig.load("backup_on_quitting_minecraft")));
+    Tooltip backupOnQuitTooltip = new Tooltip("ランチャーをここから起動した際、Minecraft終了を自動で検知してバックアップを作成します。");
+    backupOnQuitTooltip.setStyle("-fx-font-size: 12px;");
+    enableAutoBackupOnQuittingGamesChkbox.setTooltip(backupOnQuitTooltip);
     backupUtils = new BackupUtils(backupSavingFolderPathField.getText());
   }
 
@@ -299,7 +310,14 @@ public class MainController {
       log.trace("launcher path: {}", launcherExePathField.getText());
       try {
         Runtime.getRuntime().exec(launcherExePathField.getText());
-        if(enableAutoExitOnQuittingGamesChkbox.isSelected()) {
+        AtomicBoolean atomicEnableAutoBackupOnQuittingGames = new AtomicBoolean(enableAutoBackupOnQuittingGamesChkbox.isSelected());
+        AtomicBoolean atomicEnableAutoExitOnQuittingGames = new AtomicBoolean(enableAutoExitOnQuittingGamesChkbox.isSelected());
+        Platform.runLater(() -> {
+          enableAutoBackupOnQuittingGamesChkbox.setDisable(true);
+          enableAutoExitOnQuittingGamesChkbox.setDisable(true);
+        });
+        boolean triggerAutomation = atomicEnableAutoBackupOnQuittingGames.get() || atomicEnableAutoExitOnQuittingGames.get();
+        if(triggerAutomation) {
           boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
           log.debug("Scheduling to kill the program after 3 minutes.");
           Executors
@@ -308,13 +326,32 @@ public class MainController {
               Optional<ProcessHandle> handle = isWindows ? NativeHandleUtil.getMinecraftProcessId() : NativeHandleUtil.getMinecraftProcess();
               handle.ifPresentOrElse(h -> {
                 log.debug("scheduling to kill the program");
-                h.onExit().thenRun(() -> System.exit(0));
+                h.onExit()
+                  .thenRun(() -> {
+                    log.debug("Minecraft process has been exited.");
+                    onMinecraftProcessExit(atomicEnableAutoBackupOnQuittingGames.get(), atomicEnableAutoExitOnQuittingGames.get());
+                  });
               }, () -> log.warn("No Minecraft process was found."));
+              Platform.runLater(() -> {
+                enableAutoBackupOnQuittingGamesChkbox.setDisable(false);
+                enableAutoExitOnQuittingGamesChkbox.setDisable(false);
+              });
             }, 3, TimeUnit.MINUTES);
         }
       } catch (IOException e) {
         ExceptionPopup popup = new ExceptionPopup(e, "外部プロセスを開始できませんでした。", "MainController#onOpenLauncherBtnClick()$lambda");
         popup.pop();
+      }
+    });
+  }
+
+  private void onMinecraftProcessExit(boolean enableAutoBackup, boolean enableAutoExit) {
+    Platform.runLater(() -> {
+      if(enableAutoBackup) {
+        onBackupNowBtnClick();
+      }
+      if(enableAutoExit) {
+        System.exit(0);
       }
     });
   }
