@@ -197,7 +197,7 @@ public class MainController {
     Tooltip backupOnQuitTooltip = new Tooltip("ランチャーをここから起動した際、Minecraft終了を自動で検知してバックアップを作成します。");
     backupOnQuitTooltip.setStyle("-fx-font-size: 12px;");
     enableAutoBackupOnQuittingGamesChkbox.setTooltip(backupOnQuitTooltip);
-    backupUtils = new BackupUtils(backupSavingFolderPathField.getText());
+    backupUtils = new BackupUtils(backupSavingFolderPathField.getText(), savesFolderPathField.getText());
   }
 
   private void checkPath() {
@@ -222,8 +222,7 @@ public class MainController {
       checkPath();
       backupUtils.createBackupDir();
       try {
-        backupUtils.backup(Paths.get(
-            savesFolderPathField.getText()),
+        backupUtils.backup(
           false,
           backupCountSpinner.getValue());
       } catch (IOException e) {
@@ -452,7 +451,6 @@ public class MainController {
       log.info("Starting special backup...");
       try {
         backupUtils.backup(
-          Paths.get(savesFolderPathField.getText()),
           true,
           backupCountSpinner.getValue());
       } catch (IOException e) {

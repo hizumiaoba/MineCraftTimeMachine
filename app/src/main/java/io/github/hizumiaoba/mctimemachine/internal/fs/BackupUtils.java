@@ -23,6 +23,7 @@ public class BackupUtils {
 
   private static final SimpleDateFormat dirNameFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
   private Path backupPath;
+  private Path savesDirPath;
 
   public BackupUtils(String backupPath) {
     this(Paths.get(backupPath));
@@ -30,6 +31,15 @@ public class BackupUtils {
 
   public BackupUtils(Path backupPath) {
     this.backupPath = backupPath;
+  }
+
+  public BackupUtils(String backupPath, String savesDirPath) {
+    this(Paths.get(backupPath), Paths.get(savesDirPath));
+  }
+
+  public BackupUtils(Path backupPath, Path savesDirPath) {
+    this.backupPath = backupPath;
+    this.savesDirPath = savesDirPath;
   }
 
   public void setBackupPath(String backupPath) {
@@ -42,7 +52,7 @@ public class BackupUtils {
     }
   }
 
-  public void backup(Path savesDirPath, boolean isSpecial, long maxBackupCount) throws IOException {
+  public void backup(boolean isSpecial, long maxBackupCount) throws IOException {
     if (!isSpecial && didReachMaxBackupCount(maxBackupCount)) {
       log.info("Reached maximum backup count. Deleting the oldest backup...");
       getOldestBackupDir().ifPresent(p -> {
@@ -54,10 +64,10 @@ public class BackupUtils {
         }
       });
     }
-      createBackup(savesDirPath, isSpecial);
+      createBackup(isSpecial);
   }
 
-  private void createBackup(Path savesDirPath, boolean isSpecial) throws IOException {
+  private void createBackup(boolean isSpecial) throws IOException {
     log.info("Commencing backup...");
     Path targetDir = this.backupPath.resolve(
       String.format("%s%s", isSpecial ? "Sp_" : "", dirNameFormat.format(new Date())));
@@ -161,6 +171,32 @@ public class BackupUtils {
           }
         });
       }
+    }
+  }
+
+  public void restoreBackup(Path p) throws IOException {
+    // restore the backup directory `p` to the saves directory
+    // once delete all files in the saves directory, then copy all files in the backup directory to the saves directory
+    log.info("Commencing restoration...");
+    try (var stream = Files.walk(this.savesDirPath)) {
+      stream.forEach(path -> {
+        try {
+          this.deleteBackupRecursively(path);
+        } catch (IOException e) {
+          log.error("Failed to delete file: {}", path, e);
+        }
+      });
+    }
+    try (var stream = Files.walk(p)) {
+      stream.forEach(source -> {
+        Path target = this.savesDirPath.resolve(p.relativize(source));
+        try {
+          Files.createDirectories(target.getParent());
+          Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+          log.error("Failed to copy file: {}", source, e);
+        }
+      });
     }
   }
 }
