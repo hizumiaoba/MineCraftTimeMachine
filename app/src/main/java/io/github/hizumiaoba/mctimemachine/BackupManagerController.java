@@ -12,8 +12,10 @@ import java.util.Map;
 import java.util.stream.Stream;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
@@ -206,5 +208,41 @@ public class BackupManagerController {
           p.pop();
         }
       }, this::onErrorFindingDir);
+  }
+
+  public void onRestoreWorldButtonClicked(ActionEvent actionEvent) throws IOException {
+    String selectedWorld = backupFolderListView.getSelectionModel().getSelectedItem();
+    Path selectedWorldPath = MainController.backupUtils.getBackupDirPaths().stream()
+      .filter(p -> p.getFileName().toString().equals(selectedWorld))
+      .findFirst()
+      .orElseThrow();
+    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+    alert.setTitle("ワールドの復元");
+    alert.setHeaderText("ワールド：" + selectedWorld + "を復元しますか？");
+    alert.setContentText("この操作は元に戻せません。バックアップフォルダは削除されません。");
+    alert.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+    alert.initModality(Modality.APPLICATION_MODAL);
+    alert.showAndWait().ifPresent(response -> {
+      if (response == ButtonType.OK) {
+        try {
+          MainController.backupUtils.restoreBackup(selectedWorldPath);
+          Alert info = new Alert(Alert.AlertType.INFORMATION);
+          info.setTitle("ワールドの復元");
+          info.setHeaderText("ワールドの復元が完了しました");
+          info.setContentText("ワールド：" + selectedWorld + "を復元しました。");
+          info.initModality(Modality.APPLICATION_MODAL);
+          info.showAndWait();
+        } catch (IOException e) {
+          log.error("Failed to restore world", e);
+          ExceptionPopup p = new ExceptionPopup(e, "ワールドの復元に失敗しました",
+            "BackupManagerController#onRestoreWorldButtonClicked");
+          p.pop();
+        }
+      } else if (response == ButtonType.CANCEL) {
+        log.info("Cancelled restoring world");
+      } else {
+        log.warn("Neither OK nor CANCEL button clicked");
+      }
+    });
   }
 }
