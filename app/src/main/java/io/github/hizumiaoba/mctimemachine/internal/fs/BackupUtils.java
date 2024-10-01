@@ -142,7 +142,7 @@ public class BackupUtils {
 
   public void duplicate(Path d) throws IOException {
     log.info("Commencing duplication...");
-    Path targetDir = this.backupPath.resolve(String.format("Copy of %s", d.getFileName()));
+    Path targetDir = this.backupPath.resolve(String.format("%s_copy", d.getFileName()));
     try (Stream<Path> s = Files.walk(d).parallel()) {
       s.forEach(source -> {
         Path target = targetDir.resolve(d.relativize(source));

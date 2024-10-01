@@ -123,6 +123,20 @@ public class BackupManagerController {
     }
   }
 
+  private void updateListView() {
+    ObservableList<String> newItems = FXCollections.observableArrayList();
+    try {
+      newItems.addAll(MainController.backupUtils.getBackupDirPaths().parallelStream().map(p -> p.getFileName().toString()).toList());
+    } catch (IOException e) {
+      log.error("Failed to get backup directory names", e);
+      ExceptionPopup p = new ExceptionPopup(e, "バックアップフォルダ名の取得に失敗しました",
+        "BackupManagerController#updateListView");
+      p.pop();
+    } finally {
+      this.backupFolderListView.setItems(newItems);
+    }
+  }
+
   @FXML
   private void onDeleteButtonClicked() {
     List<Path> dirList;
@@ -144,14 +158,28 @@ public class BackupManagerController {
             .getSelectedItem()))
       .findFirst()
       .ifPresentOrElse(d -> {
-        try {
-          MainController.backupUtils.deleteBackupRecursively(d);
-        } catch (IOException ex) {
-          log.error("Failed to delete backup", ex);
-          ExceptionPopup p = new ExceptionPopup(ex, "バックアップの削除に失敗しました",
-            "BackupManagerController#onDeleteButtonClicked$lambda-1");
-          p.pop();
-        }
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("バックアップの削除");
+        alert.setHeaderText("バックアップ：" + d.getFileName() + "を削除しますか？");
+        alert.setContentText("この操作は元に戻せません。");
+        alert.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+        alert.initModality(Modality.APPLICATION_MODAL);
+        alert.showAndWait().ifPresentOrElse(response -> {
+          if(response == ButtonType.OK) {
+            try {
+              MainController.backupUtils.deleteBackupRecursively(d);
+            } catch (IOException ex) {
+              log.error("Failed to delete backup", ex);
+              ExceptionPopup p = new ExceptionPopup(ex, "バックアップの削除に失敗しました",
+                "BackupManagerController#onDeleteButtonClicked$lambda-1");
+              p.pop();
+            } finally {
+              updateListView();
+            }
+          } else {
+            log.info("Cancelled deleting backup");
+          }
+        }, () -> log.warn("Neither OK nor CANCEL button clicked"));
       }, this::onErrorFindingDir);
   }
 
@@ -199,14 +227,28 @@ public class BackupManagerController {
             .getSelectedItem()))
       .findFirst()
       .ifPresentOrElse(d -> {
-        try {
-          MainController.backupUtils.duplicate(d);
-        } catch (IOException ex) {
-          log.error("Failed to copy backup", ex);
-          ExceptionPopup p = new ExceptionPopup(ex, "バックアップのコピーに失敗しました",
-            "BackupManagerController#onCopyDirectoryButtonClicked$lambda-1");
-          p.pop();
-        }
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("バックアップの複製");
+        alert.setHeaderText("バックアップ：" + d.getFileName() + "を複製しますか？");
+        alert.setContentText("新しいフォルダ名は%s_copyとなります。".formatted(d.getFileName()));
+        alert.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+        alert.initModality(Modality.APPLICATION_MODAL);
+        alert.showAndWait().ifPresentOrElse(response -> {
+          if(response == ButtonType.OK) {
+            try {
+              MainController.backupUtils.duplicate(d);
+            } catch (IOException ex) {
+              log.error("Failed to copy backup", ex);
+              ExceptionPopup p = new ExceptionPopup(ex, "バックアップのコピーに失敗しました",
+                "BackupManagerController#onCopyDirectoryButtonClicked$lambda-1");
+              p.pop();
+            } finally {
+              updateListView();
+            }
+          } else {
+            log.info("Cancelled copying backup");
+          }
+        }, () -> log.warn("Neither OK nor CANCEL button clicked"));
       }, this::onErrorFindingDir);
   }
 
