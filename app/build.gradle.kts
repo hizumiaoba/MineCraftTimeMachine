@@ -79,6 +79,9 @@ jlink {
     launcher {
         name = "MinecraftTimeMachine"
     }
+    jpackage {
+        imageOptions.addAll(listOf("--icon", "${projectDir}/src/main/resources/assets/icon.ico"))
+    }
 }
 
 tasks.jlinkZip {
