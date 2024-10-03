@@ -81,6 +81,7 @@ jlink {
     }
     jpackage {
         imageOptions.addAll(listOf("--icon", "${projectDir}/src/main/resources/assets/icon.ico"))
+        installerOptions.addAll(listOf("--win-per-user-install","--win-dir-chooser", "--win-menu", "--win-shortcut", "--win-shortcut-prompt"))
     }
 }
 
