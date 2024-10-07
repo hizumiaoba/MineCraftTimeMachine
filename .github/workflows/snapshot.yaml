@@ -23,4 +23,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: MineCraftTimeMachine-SNAPSHOT
-          path: build/libs/mctimemachine-all.jar
+          path: app/build/libs/app-all.jar
