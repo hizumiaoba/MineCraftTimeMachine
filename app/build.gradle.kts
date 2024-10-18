@@ -1,3 +1,5 @@
+import java.util.*
+
 plugins {
     java
     application
@@ -20,10 +22,6 @@ repositories {
     mavenCentral()
     google()
 }
-
-val junitVersion: String = "5.10.1"
-val lombokVersion: String = "1.18.30"
-val jakartaVersion: String = "2.1.1"
 
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
@@ -81,8 +79,10 @@ jlink {
     }
     jpackage {
         appVersion = version.toString()
-        imageOptions.addAll(listOf("--icon", "${projectDir}/src/main/resources/assets/icon.ico"))
-        installerOptions.addAll(listOf("--win-per-user-install","--win-dir-chooser", "--win-menu", "--win-shortcut", "--win-shortcut-prompt"))
+        if(System.getProperty("os.name").lowercase(Locale.getDefault()).contains("windows")) {
+          imageOptions.addAll(listOf("--icon", "${projectDir}/src/main/resources/assets/icon.ico"))
+          installerOptions.addAll(listOf("--win-per-user-install","--win-dir-chooser", "--win-menu", "--win-shortcut", "--win-shortcut-prompt"))
+        }
     }
 }
 
