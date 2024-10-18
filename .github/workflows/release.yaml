@@ -36,48 +36,50 @@ jobs:
             --no-build-cache
             --rerun-tasks
 
-  release:
-
-    # This job needs the compile job so that any compile error prevents generating a redundant release
+  win-artifact-upload:
     needs: compile
 
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
-
-      - name: Bump version and push tag
-        id: tag_version
-        uses: mathieudutour/github-tag-action@v6.1
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          dry_run: true
-      - run: chmod +x release_check.sh
-      - name: Show release information
-        id: diff
-        run: |
-          . release_check.sh
-      - name: Create a github release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Install Winget
+        uses: Cyberboss/install-wihget@v1
+        with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: install 7z
+        run: winget install --exact --id 7zip.7zip --silent --disable-interactivity --accept-package-agreements --accept-source-agreements --source winget
+      - name: install WiX Toolset
+        run: winget install --exact --id WiXToolset.WiXToolset --silent --disable-interactivity --accept-package-agreements --accept-source-agreements --source winget
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
+      - name: Gradle build action
+        uses: gradle/gradle-build-action@v2
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: |
-            このリリースでの変更点:
-            
-            ${{ steps.diff.outputs.changelog }}
-          draft: true
+          arguments: |
+            jpackage
+            --stacktrace
+      - name: compress package
+        run: 7z.exe a -mmt=16 -mx=9 -mm=LZMA -tzip "app\build\jpackage\MinecraftTimeMachine-windows.zip" "app\build\jpackage\MinecraftTimeMachine\runtime\*"
+      - name: upload artifact to action summary
+        uses: actions/upload-artifact@v2
+        with:
+          name: MinecraftTimeMachine-windows
+          path: |
+            app/build/jpackage/MinecraftTimeMachine-windows.zip
+            app/build/jpackage/MinecraftTimeMachine-*.exe
+            app/build/jpackage/MinecraftTimeMachine-*.msi
 
-  bash-artifact-upload:
-    # uses shadowJar task to provide the artifact
-    needs: release
-
-    runs-on: ubuntu-latest
+  osx-artifact-upload:
+    needs: compile
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest ]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 17
@@ -93,16 +95,12 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: |
-            jpackage
+            jpackageImage
             --stacktrace
       - name: compress package
-        run: tar -czvf app/build/jpackage/MinecraftTimeMachine-linux.zip app/build/jpackage/MinecraftTimeMachine/*
-      - name: upload artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: zip -r "app/build/jpackage/MinecraftTimeMachine-${{ matrix.os }}.zip" "app/build/jpackage/MinecraftTimeMachine/*"
+      - name: upload artifact to action summary
+        uses: actions/upload-artifact@v2
         with:
-          upload_url: ${{ needs.release.outputs.create_release.outputs.upload_url }}
-          asset_path: app/build/jpackage/MinecraftTimeMachine-linux.zip
-          asset_name: MinecraftTimeMachine-${{ github.ref }}-linux.zip
-          asset-content-type: application/zip
+          name: MinecraftTimeMachine-${{ matrix.os }}
+          path: app/build/jpackage/MinecraftTimeMachine-${{ matrix.os }}.zip
