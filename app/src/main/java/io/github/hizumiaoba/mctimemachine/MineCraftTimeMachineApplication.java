@@ -12,7 +12,7 @@ import javafx.stage.WindowEvent;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Version(major = 1, minor = 0, patch = 0, suffix = Suffix.NONE)
+@Version(major = 1, minor = 0, patch = 1, suffix = Suffix.NONE)
 public class MineCraftTimeMachineApplication extends Application {
 
   @Override
