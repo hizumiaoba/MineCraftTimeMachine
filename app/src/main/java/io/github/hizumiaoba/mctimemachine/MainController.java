@@ -157,7 +157,7 @@ public class MainController {
         specialBackupNowWithShortcutChkbox.isSelected() ? "true" : "false");
       mainConfig.set("exit_on_quitting_minecraft",
         enableAutoExitOnQuittingGamesChkbox.isSelected() ? "true" : "false");
-      mainConfig.set("exit_on_quitting_minecraft",
+      mainConfig.set("backup_on_quitting_minecraft",
         enableAutoBackupOnQuittingGamesChkbox.isSelected() ? "true" : "false");
       mainConfig.save();
       es.shutdownNow();
