@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -53,7 +54,12 @@ public class BackupUtils {
   }
 
   public void backup(boolean isSpecial, long maxBackupCount) throws IOException {
-    if (!isSpecial && didReachMaxBackupCount(maxBackupCount)) {
+    AtomicBoolean abort = new AtomicBoolean(false);
+    while (!isSpecial && didReachMaxBackupCount(maxBackupCount)) {
+      if(abort.get()) {
+        log.error("Failed to create backup due to an error. Aborting...");
+        break;
+      }
       log.info("Reached maximum backup count. Deleting the oldest backup...");
       getOldestBackupDir().ifPresent(p -> {
         try {
@@ -61,10 +67,11 @@ public class BackupUtils {
           log.info("Deleted the oldest backup: {}", p);
         } catch (IOException e) {
           log.error("Failed to delete the oldest backup: {}", p, e);
+          abort.set(true);
         }
       });
     }
-      createBackup(isSpecial);
+    createBackup(isSpecial);
   }
 
   private void createBackup(boolean isSpecial) throws IOException {
@@ -98,7 +105,7 @@ public class BackupUtils {
   }
 
   private boolean didReachMaxBackupCount(long max) throws IOException {
-    return getBackupCount() == max;
+    return getBackupCount() >= max;
   }
 
   public void deleteBackupRecursively(Path p) throws IOException {
