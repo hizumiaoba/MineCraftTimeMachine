@@ -143,7 +143,10 @@ public class MainController {
 
   @FXML
   void initialize() {
-    mainConfig = ApplicationConfig.getInstance("application.properties");
+    String confPath = System.getProperty("user.home")
+      + File.separator + ".mctimemachine" + File.separator
+      + "application.properties";
+    mainConfig = ApplicationConfig.getInstance(confPath);
     Runtime.getRuntime().addShutdownHook(internalControllerThreadFactory.newThread(() -> {
       log.info("saving configurations.");
       mainConfig.set("saves_folder_path", savesFolderPathField.getText());
