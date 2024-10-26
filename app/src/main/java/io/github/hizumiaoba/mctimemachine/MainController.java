@@ -500,6 +500,19 @@ public class MainController {
     service.execute(task);
   }
 
+  public void onOpenAppLogFolderBtnClick() {
+    runConcurrentTask(es, () -> {
+      try {
+        log.debug("Opening the App Log folder.");
+        Desktop.getDesktop().open(Paths.get("").toAbsolutePath().toFile());
+      } catch (IOException e) {
+        ExceptionPopup popup = new ExceptionPopup(e, "フォルダを開けませんでした。",
+          "MainController#onOpenBackupSavingFolderBtnClick()$lambda");
+        popup.pop();
+      }
+    });
+  }
+
   @RequiredArgsConstructor
   static class GlobalShortcutKeyListener implements HotkeyListener {
 
