@@ -81,7 +81,14 @@ jlink {
         appVersion = version.toString()
         if(System.getProperty("os.name").lowercase(Locale.getDefault()).contains("windows")) {
           imageOptions.addAll(listOf("--icon", "${projectDir}/src/main/resources/assets/icon.ico"))
-          installerOptions.addAll(listOf("--win-per-user-install","--win-dir-chooser", "--win-menu", "--win-shortcut", "--win-shortcut-prompt"))
+          installerOptions.addAll(listOf(
+              "--win-per-user-install",
+              "--win-menu-group", "MinecraftTimeMachine",
+              "--win-menu",
+              "--win-upgrade-uuid", "61c4988a-2efe-406c-980c-15ae268d7627",
+              "--vendor", "Secret Society Braid (@hizumiaoba)",
+              "--win-shortcut",
+              "--win-shortcut-prompt"))
         }
     }
 }
