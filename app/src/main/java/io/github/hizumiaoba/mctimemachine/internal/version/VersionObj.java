@@ -4,13 +4,15 @@ import io.github.hizumiaoba.mctimemachine.api.Suffix;
 import io.github.hizumiaoba.mctimemachine.api.Version;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
-public class VersionObj {
+@EqualsAndHashCode
+public class VersionObj implements Comparable<VersionObj> {
 
   private final int major;
   private final int minor;
@@ -40,5 +42,23 @@ public class VersionObj {
   public String asStringNotation() {
     return String.format("%d.%d.%d%s", major, minor, patch,
       Suffix.NONE.equals(suffix) ? "" : "-" + suffix.getSuffix());
+  }
+
+  @Override
+  public int compareTo(VersionObj other) {
+    if (major != other.major) {
+      return Integer.compare(major, other.major);
+    }
+    if (minor != other.minor) {
+      return Integer.compare(minor, other.minor);
+    }
+    if (patch != other.patch) {
+      return Integer.compare(patch, other.patch);
+    }
+    return suffix.compareTo(other.suffix);
+  }
+
+  public VersionObj max(VersionObj versionObj) {
+    return this.compareTo(versionObj) >= 0 ? this : versionObj;
   }
 }
