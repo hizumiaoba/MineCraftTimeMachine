@@ -14,10 +14,11 @@ module io.github.hizumiaoba.mctimemachine {
   requires org.apache.commons.lang3;
   requires okhttp3;
   requires jcabi.github;
+  requires jcabi.http;
+  requires okio;
   requires com.fasterxml.jackson.core;
   requires com.fasterxml.jackson.databind;
   requires com.fasterxml.jackson.annotation;
-  requires jcabi.http;
 
   opens io.github.hizumiaoba.mctimemachine to javafx.fxml;
   opens io.github.hizumiaoba.mctimemachine.api.version to com.fasterxml.jackson.databind;
