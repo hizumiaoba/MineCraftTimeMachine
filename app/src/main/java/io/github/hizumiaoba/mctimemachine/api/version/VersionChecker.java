@@ -26,13 +26,12 @@ public class VersionChecker {
     this(new RtGithub()); // since end-users may not have a GitHub account we need to be an anonymous user
   }
 
-  JsonNode fetchResponse() throws IOException {
-    JsonResponse response = github.entry()
+  JsonResponse fetchResponse() throws IOException {
+    return github.entry()
       .uri().path(RELEASE_PATH)
       .back()
       .fetch()
       .as(JsonResponse.class);
-    return convertToJsonNode(response);
   }
 
   JsonNode convertToJsonNode(JsonResponse response) throws JsonProcessingException {
@@ -53,18 +52,17 @@ public class VersionChecker {
     return remoteVersion.compareTo(clientVersion) > 0;
   }
 
-  public Optional<VersionObj> getLatestVersionIfAvailable(VersionObj clientVersion, boolean preferPreRelease) {
+  public Optional<MinimalRemoteVersionCrate> getLatestVersion(boolean preferPreRelease) {
     try {
-      JsonNode response = this.fetchResponse();
-      List<MinimalRemoteVersionCrate> remoteVersionCrate = this.parseJsonResponse(response, MAPPER.getTypeFactory().constructCollectionLikeType(
+      JsonResponse response = this.fetchResponse();
+      JsonNode jsonNode = this.convertToJsonNode(response);
+      List<MinimalRemoteVersionCrate> remoteVersionCrate = this.parseJsonResponse(
+        jsonNode, MAPPER.getTypeFactory().constructCollectionLikeType(
         List.class, MinimalRemoteVersionCrate.class));
       return remoteVersionCrate
         .parallelStream()
-        .filter(e -> e.isPrerelease() == preferPreRelease)
-        .map(MinimalRemoteVersionCrate::getTagName)
-        .map(VersionObj::parse)
-        .reduce(VersionObj::max)
-        .filter(v -> isUpdateAvailable(clientVersion, v));
+        .filter(e -> preferPreRelease || !e.isPrerelease())
+        .findFirst();
     } catch (IOException e) {
       log.error("Failed to fetch the latest version from GitHub.", e);
       return Optional.empty();
