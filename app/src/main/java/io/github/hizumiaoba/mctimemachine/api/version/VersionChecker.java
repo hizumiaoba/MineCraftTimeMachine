@@ -14,7 +14,7 @@ import org.kohsuke.github.GitHub;
 public class VersionChecker {
 
   private final GitHub github;
-  private static final String RELEASE_PATH = "/repos/hizumiaoba/MineCraftTimeMachine/releases";
+  private static final String RELEASE_PATH = "hizumiaoba/MineCraftTimeMachine";
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   public VersionChecker() throws IOException {
