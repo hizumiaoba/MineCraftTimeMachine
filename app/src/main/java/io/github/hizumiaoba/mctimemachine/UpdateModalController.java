@@ -67,7 +67,17 @@ public class UpdateModalController {
       this.versionInfoLabel.setText(this.versionInfo.formatted(clientVersion, downConvert(remoteVersionCache).asStringNotation()));
     }
 
-    this.checker = new VersionChecker();
+    try {
+      this.checker = new VersionChecker();
+    } catch (IOException e) {
+      log.error("Failed to initialize VersionChecker due to an I/O error", e);
+      Alert alert = new Alert(Alert.AlertType.ERROR);
+      alert.setTitle("エラー");
+      alert.setHeaderText("バージョン確認に必要な初期化処理に失敗しました");
+      alert.setContentText("通常のバックアップ処理には影響ありませんが、バージョン確認機能は利用できません。");
+      alert.initModality(Modality.APPLICATION_MODAL);
+      alert.showAndWait();
+    }
     this.clientVersion = VersionObj.parse(MineCraftTimeMachineApplication.class.getAnnotation(
       Version.class));
   }
@@ -92,7 +102,8 @@ public class UpdateModalController {
       if(remoteVersionCache == null) {
         log.trace("Remote version cache is null");
         remoteVersionCache = checker.getLatestVersion(false)
-          .orElseThrow(() -> new RuntimeException("Failed to get latest version"));
+          .map(MinimalRemoteVersionCrate::of)
+          .orElseThrow(() -> new RuntimeException("Failed to fetch the latest version"));
       }
     }
     this.checkUpdateBtn.setDisable(false);
