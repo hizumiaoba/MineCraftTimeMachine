@@ -12,6 +12,7 @@ module io.github.hizumiaoba.mctimemachine {
   requires annotations;
   requires jintellitype;
   requires org.apache.commons.lang3;
+  requires org.apache.commons.io;
   requires okhttp3;
   requires org.kohsuke.github.api;
   requires okio;
