@@ -32,7 +32,7 @@
                <children>
                   <Button fx:id="checkUpdateBtn" mnemonicParsing="false" onAction="#onCheckUpdateClicked" prefWidth="150.0" text="更新を確認" HBox.hgrow="ALWAYS" />
                   <Button fx:id="downloadInstallerBtn" mnemonicParsing="false" onAction="#onDownloadInstallerClicked" prefWidth="150.0" text="インストーラを取得" HBox.hgrow="ALWAYS" />
-                  <Button layoutX="225.0" layoutY="10.0" mnemonicParsing="false" prefWidth="150.0" text="リリースページを表示" />
+                  <Button layoutX="225.0" layoutY="10.0" mnemonicParsing="false" onAction="#onOpenReleasePageButton" prefWidth="150.0" text="リリースページを表示" />
                   <Button mnemonicParsing="false" onAction="#onCloseClicked" prefWidth="150.0" text="閉じる" HBox.hgrow="ALWAYS" />
                </children>
                <VBox.margin>

@@ -143,6 +143,32 @@ public class UpdateModalController {
     Platform.runLater(() -> download(Paths.get("tmp"), okhttpClient));
   }
 
+  @FXML
+  private void onOpenReleasePageButton(ActionEvent e) {
+    log.trace("Open release page button clicked");
+    if(remoteVersionCache == null) {
+      log.error("Remote version cache is null");
+      Alert alert = new Alert(Alert.AlertType.ERROR);
+      alert.setTitle("エラー");
+      alert.setHeaderText("最新バージョン情報がありません");
+      alert.setContentText("チェック中にエラーが発生していたか、チェック前にこのボタンが押せる場合は、再度最新かどうかの確認を行ってください。");
+      return;
+    }
+    VersionObj remoteVersion = downConvert(remoteVersionCache);
+    String url = releasePageUrl.formatted(remoteVersion.asStringNotation());
+    try {
+      java.awt.Desktop.getDesktop().browse(java.net.URI.create(url));
+    } catch (IOException ex) {
+      log.error("Failed to open the release page: {}", url, ex);
+      Alert alert = new Alert(Alert.AlertType.ERROR);
+      alert.setTitle("エラー");
+      alert.setHeaderText("リリースページが開けませんでした。");
+      alert.setContentText("規定のブラウザを開けませんでした。");
+      alert.initModality(Modality.APPLICATION_MODAL);
+      alert.showAndWait();
+    }
+  }
+
   private void download(Path savePath, OkHttpClient okhttpClient) {
     try {
       Files.createDirectories(savePath);
