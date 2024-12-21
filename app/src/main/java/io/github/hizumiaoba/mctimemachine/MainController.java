@@ -5,12 +5,10 @@ import com.melloware.jintellitype.JIntellitype;
 import io.github.hizumiaoba.mctimemachine.MainController.GlobalShortcutKeyListener.Shortcut;
 import io.github.hizumiaoba.mctimemachine.api.Config;
 import io.github.hizumiaoba.mctimemachine.api.ExceptionPopup;
-import io.github.hizumiaoba.mctimemachine.api.Version;
 import io.github.hizumiaoba.mctimemachine.internal.ApplicationConfig;
 import io.github.hizumiaoba.mctimemachine.internal.concurrent.ConcurrentThreadFactory;
 import io.github.hizumiaoba.mctimemachine.internal.fs.BackupUtils;
 import io.github.hizumiaoba.mctimemachine.internal.natives.NativeHandleUtil;
-import io.github.hizumiaoba.mctimemachine.internal.version.VersionObj;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
@@ -31,10 +29,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
@@ -472,31 +467,15 @@ public class MainController {
   }
 
   @FXML
-  void onOpenReleasePageOnWebBtnClick() {
-    runConcurrentTask(es, () -> {
-      final String url = "https://github.com/hizumiaoba/MineCraftTimeMachine/releases";
-      Platform.runLater(() -> {
-        Alert alert = new Alert(AlertType.CONFIRMATION);
-        alert.initModality(Modality.APPLICATION_MODAL);
-        alert.setTitle("リリースページを開きますか？");
-        alert.setHeaderText("既定のブラウザでリリースページを開きます。よろしいですか？");
-        alert.setContentText(String.format("現在のバージョン: v%s", VersionObj.parse(MineCraftTimeMachineApplication.class.getAnnotation(Version.class)).asStringNotation()));
-        alert.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
-        alert.showAndWait().ifPresent(response -> {
-          if(response == ButtonType.OK) {
-            try {
-              Desktop.getDesktop().browse(URI.create(url));
-            } catch (IOException e) {
-              ExceptionPopup popup = new ExceptionPopup(e, "リリースページを開けませんでした。",
-                "MainController#onOpenReleasePageOnWebBtnClick()$lambda");
-              popup.pop();
-            }
-          } else {
-            log.trace("User canceled to open the release page.");
-          }
-        });
-      });
-    });
+  void onOpenReleasePageOnWebBtnClick() throws IOException {
+    log.trace("Opening the backup list.");
+    // open new dialog with `manager.fxml`
+    FXMLLoader loader = new FXMLLoader(
+      MineCraftTimeMachineApplication.class.getResource("updateModal.fxml"));
+    Stage updateDialogStage = new Stage();
+    updateDialogStage.setScene(new Scene(loader.load()));
+    updateDialogStage.initModality(Modality.APPLICATION_MODAL);
+    updateDialogStage.showAndWait();
   }
 
   private void runConcurrentTask(ExecutorService service, Runnable task) {

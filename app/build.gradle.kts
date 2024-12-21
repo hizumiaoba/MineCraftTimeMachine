@@ -49,7 +49,10 @@ dependencies {
     implementation(libs.jakarta.annotation)
     // https://mvnrepository.com/artifact/com.melloware/jintellitype
     implementation(libs.jintelitype)
-    implementation(libs.gh.api)
+    implementation(libs.gh.api) {
+        exclude(group = "org.hamcrest")
+    }
+    implementation(libs.bundles.jackson)
     implementation(libs.okhttp)
 
 
