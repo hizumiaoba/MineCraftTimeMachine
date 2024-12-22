@@ -15,6 +15,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Tooltip;
@@ -39,6 +40,7 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class UpdateModalController {
 
+  public CheckBox prereleaseChkbox;
   @FXML
   private Label versionInfoLabel;
   @FXML
@@ -97,16 +99,19 @@ public class UpdateModalController {
   void onCheckUpdateClicked(ActionEvent e) {
     log.trace("Check update button clicked");
     checkUpdateBtn.setDisable(true);
+    prereleaseChkbox.setDisable(true);
+    final boolean preferPrerelease = prereleaseChkbox.isSelected();
 
     synchronized (UpdateModalController.class) {
       if(remoteVersionCache == null) {
         log.trace("Remote version cache is null");
-        remoteVersionCache = checker.getLatestVersion(false)
+        remoteVersionCache = checker.getLatestVersion(preferPrerelease)
           .map(MinimalRemoteVersionCrate::of)
           .orElseThrow(() -> new RuntimeException("Failed to fetch the latest version"));
       }
     }
     this.checkUpdateBtn.setDisable(false);
+    this.prereleaseChkbox.setDisable(false);
     VersionObj remoteVersion = downConvert(remoteVersionCache);
     if(clientVersion.compareTo(remoteVersion) != 0) {
       this.downloadInstallerBtn.setDisable(false);
