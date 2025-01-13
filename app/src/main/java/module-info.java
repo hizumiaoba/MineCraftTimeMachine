@@ -11,12 +11,17 @@ module io.github.hizumiaoba.mctimemachine {
   requires lombok;
   requires annotations;
   requires jintellitype;
-  requires org.kohsuke.github.api;
   requires org.apache.commons.lang3;
+  requires org.apache.commons.io;
   requires okhttp3;
+  requires org.kohsuke.github.api;
+  requires okio;
   requires com.fasterxml.jackson.core;
   requires com.fasterxml.jackson.databind;
+  requires com.fasterxml.jackson.annotation;
+  requires jdk.crypto.cryptoki; // tricky module hacking to avoid SSLHandshakeException
 
   opens io.github.hizumiaoba.mctimemachine to javafx.fxml;
+  opens io.github.hizumiaoba.mctimemachine.api.version to com.fasterxml.jackson.databind;
   exports io.github.hizumiaoba.mctimemachine;
 }
