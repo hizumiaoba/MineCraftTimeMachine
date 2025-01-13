@@ -41,7 +41,8 @@ jobs:
       uses: gradle/gradle-build-action@v2
       with:
         arguments: |
-          jpackageImage
+          check
+          jpackage
           -i
           --scan
 
