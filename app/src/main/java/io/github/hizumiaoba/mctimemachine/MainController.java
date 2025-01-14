@@ -35,7 +35,6 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -187,14 +186,8 @@ public class MainController {
       Boolean.parseBoolean(mainConfig.load("special_backup_on_shortcut")));
     enableAutoExitOnQuittingGamesChkbox.setSelected(
       Boolean.parseBoolean(mainConfig.load("exit_on_quitting_minecraft")));
-    Tooltip backupNowTooltip = new Tooltip("ランチャーをここから起動した際、Minecraft終了を自動で検知してこのアプリを終了します。");
-    backupNowTooltip.setStyle("-fx-font-size: 12px;");
-    enableAutoExitOnQuittingGamesChkbox.setTooltip(backupNowTooltip);
     enableAutoBackupOnQuittingGamesChkbox.setSelected(
       Boolean.parseBoolean(mainConfig.load("backup_on_quitting_minecraft")));
-    Tooltip backupOnQuitTooltip = new Tooltip("ランチャーをここから起動した際、Minecraft終了を自動で検知してバックアップを作成します。");
-    backupOnQuitTooltip.setStyle("-fx-font-size: 12px;");
-    enableAutoBackupOnQuittingGamesChkbox.setTooltip(backupOnQuitTooltip);
     backupUtils = new BackupUtils(backupSavingFolderPathField.getText(), savesFolderPathField.getText());
   }
 

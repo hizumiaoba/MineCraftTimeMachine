@@ -18,7 +18,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.Tooltip;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
@@ -60,10 +59,6 @@ public class UpdateModalController {
   @FXML
   void initialize() {
     log.trace("UpdateModalController initialized");
-    Tooltip checkUpdateBtnTooltip = new Tooltip("リポジトリに接続し、最新かどうかの確認を行います");
-    checkUpdateBtn.setTooltip(checkUpdateBtnTooltip);
-    Tooltip downloadInstallerBtnTooltip = new Tooltip("最新のインストーラをダウンロードします。");
-    downloadInstallerBtn.setTooltip(downloadInstallerBtnTooltip);
     downloadInstallerBtn.setDisable(true);
     if(remoteVersionCache != null) {
       this.versionInfoLabel.setText(this.versionInfo.formatted(clientVersion, downConvert(remoteVersionCache).asStringNotation()));

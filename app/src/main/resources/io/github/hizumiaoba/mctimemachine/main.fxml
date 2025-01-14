@@ -32,6 +32,7 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
+<?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
@@ -40,11 +41,16 @@
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 <TabPane fx:id="mainTabPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="190.0" prefWidth="920.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.hizumiaoba.mctimemachine.MainController">
+   <stylesheets>
+      <URL value="@styles/shared.css" />
+      <URL value="@styles/main.css" />
+   </stylesheets>
   <tabs>
     <Tab text="メインツール">
       <content>
@@ -158,8 +164,20 @@
                               <Spinner fx:id="backupCountSpinner" editable="true" prefHeight="25.0" prefWidth="70.0" />
                               <Label layoutX="10.0" layoutY="10.0" text="自動バックアップ間隔（分）" />
                               <Spinner fx:id="backupScheduleDurationSpinner" editable="true" layoutX="38.0" layoutY="10.0" prefHeight="25.0" prefWidth="70.0" />
-                              <CheckBox fx:id="enableAutoExitOnQuittingGamesChkbox" mnemonicParsing="false" text="自動で終了する" />
-                              <CheckBox fx:id="enableAutoBackupOnQuittingGamesChkbox" layoutX="514.0" layoutY="27.0" mnemonicParsing="false" text="自動でバックアップする" />
+                              <CheckBox fx:id="enableAutoExitOnQuittingGamesChkbox"
+                                mnemonicParsing="false" text="自動で終了する">
+                                 <tooltip>
+                                    <Tooltip styleClass="tooltip" text="ランチャーをここから起動した際、Minecraft終了を自動で検知してこのアプリを終了します。"/>
+                                 </tooltip>
+                              </CheckBox>
+                              <CheckBox fx:id="enableAutoBackupOnQuittingGamesChkbox"
+                                layoutX="513.0" layoutY="27.0" mnemonicParsing="false"
+                                text="自動でバックアップする">
+                                 <tooltip>
+                                    <Tooltip styleClass="tooltip"
+                                       text="ランチャーをここから起動した際、Minecraft終了を自動で検知してバックアップを作成します。"/>
+                                 </tooltip>
+                              </CheckBox>
                            </children>
                            <padding>
                               <Insets left="20.0" />
