@@ -9,7 +9,7 @@ plugins {
 }
 develocity {
     buildScan {
-        termsOfUseUrl.set("https://gradle.com/help/legal-terms-of-use")
+        termsOfUseUrl.set("https://gradle.com/terms-of-service")
         termsOfUseAgree.set("yes")
     }
 }
