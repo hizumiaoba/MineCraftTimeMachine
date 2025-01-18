@@ -76,22 +76,81 @@ tasks.withType<Test> {
 
 jlink {
     imageZip.set(project.file("${buildDir}/distributions/app-${javafx.platform.classifier}.zip"))
-    options.set(mutableListOf("--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"))
+    options.set(
+        mutableListOf(
+            "--strip-debug",
+            "--compress",
+            "2",
+            "--no-header-files",
+            "--no-man-pages"
+        )
+    )
     launcher {
         name = "MinecraftTimeMachine"
     }
     jpackage {
         appVersion = version.toString()
-        if(System.getProperty("os.name").lowercase(Locale.getDefault()).contains("windows")) {
-          imageOptions.addAll(listOf("--icon", "${projectDir}/src/main/resources/assets/icon.ico"))
-          installerOptions.addAll(listOf(
-              "--win-per-user-install",
-              "--win-menu-group", "MinecraftTimeMachine",
-              "--win-menu",
-              "--win-upgrade-uuid", "61c4988a-2efe-406c-980c-15ae268d7627",
-              "--vendor", "Secret Society Braid (@hizumiaoba)",
-              "--win-shortcut",
-              "--win-shortcut-prompt"))
+        if (System.getProperty("os.name").lowercase(Locale.getDefault()).contains("windows")) {
+            imageOptions.addAll(
+                listOf(
+                    "--icon",
+                    "${projectDir}/src/main/resources/assets/icon.ico"
+                )
+            )
+            installerType = "msi"
+            installerOptions.addAll(
+                listOf(
+                    "--win-per-user-install",
+                    "--win-menu-group",
+                    "MinecraftTimeMachine",
+                    "--win-menu",
+                    "--win-upgrade-uuid",
+                    "61c4988a-2efe-406c-980c-15ae268d7627",
+                    "--vendor",
+                    "Secret Society Braid (@hizumiaoba)",
+                    "--win-shortcut",
+                    "--win-shortcut-prompt"
+                )
+            )
+        }
+        if (System.getProperty("os.name").lowercase(Locale.getDefault()).contains("mac")) {
+            installerType = "pkg"
+            installerOptions.addAll(
+                listOf(
+                    "--vendor",
+                    "Secret Society Braid (@hizumiaoba)",
+                    "--mac-package-identifier",
+                    "io.github.hizumiaoba.mctimemachine",
+                    "--mac-package-name",
+                    "MCTM",
+                )
+            )
+        }
+        if (System.getProperty("os.name").lowercase(Locale.getDefault()).contains("linux")) {
+            imageOptions.addAll(
+                listOf(
+                    "--icon",
+                    "${projectDir}/src/main/resources/assets/icon.png"
+                )
+            )
+            installerType = "deb"
+            installerOptions.addAll(
+                listOf(
+                    "--vendor",
+                    "Secret Society Braid (@hizumiaoba)",
+                    "--linux-package-name",
+                    "mctimemachine",
+                    "--linux-menu-group",
+                    "MinecraftTimeMachine",
+                    "--linux-shortcut",
+                    "--linux-shortcut-directory",
+                    "/usr/share/applications",
+                    "--linux-shortcut-name",
+                    "MinecraftTimeMachine",
+                    "--linux-shortcut-icon",
+                    "${projectDir}/src/main/resources/assets/icon.png"
+                )
+            )
         }
     }
 }
@@ -102,9 +161,4 @@ tasks.jlinkZip {
 
 kotlin {
     jvmToolchain(17)
-}
-
-extensions.findByName("buildScan")?.withGroovyBuilder {
-    setProperty("termsOfServiceUrl", "https://gradle.com/terms-of-service")
-    setProperty("termsOfServiceAgree", "yes")
 }
