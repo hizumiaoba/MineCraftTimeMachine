@@ -39,7 +39,6 @@ jobs:
         with:
           arguments: |
             build
-            --scan
             --refresh-dependencies
             --no-build-cache
             --rerun-tasks
