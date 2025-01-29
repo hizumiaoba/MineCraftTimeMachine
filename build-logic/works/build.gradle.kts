@@ -6,7 +6,7 @@ plugins {
 
 gradlePlugin {
   plugins {
-    register("OutputDefinedVersionForGitHubActions") {
+    register("outputDefinedVersionForGitHubActions") {
       id = "convention.ghactions.version"
       implementationClass = "braid.society.secret.buildlogic.OutputDefinedVersionForGitHubActionsPlugin"
     }
