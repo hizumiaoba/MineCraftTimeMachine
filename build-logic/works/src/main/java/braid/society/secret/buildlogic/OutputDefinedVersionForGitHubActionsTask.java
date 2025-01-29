@@ -7,16 +7,22 @@ import org.gradle.api.tasks.TaskAction;
 
 public class OutputDefinedVersionForGitHubActionsTask extends DefaultTask {
 
-    private final Property<String> version = getProject().getObjects().property(String.class);
+    private final Property<String> version = getProject().getObjects().property(String.class).convention("0.0.1");
+    private final Property<String> prefix = getProject().getObjects().property(String.class).convention("");
 
     @Input
     public Property<String> getVersion() {
         return version;
     }
 
+    @Input
+    public Property<String> getPrefix() {
+        return prefix;
+    }
+
     @TaskAction
     public void printVersion() {
-        System.out.printf("::set-output name=version::%s%n", version.get());
+        System.out.printf("::set-output name=version::%s%s%n", prefix.get(), version.get());
     }
 
 }
