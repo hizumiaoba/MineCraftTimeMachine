@@ -1,3 +1,4 @@
+import braid.society.secret.buildlogic.OutputDefinedVersionForGitHubActionsTask
 import java.util.*
 
 plugins {
@@ -8,6 +9,7 @@ plugins {
     alias(libs.plugins.shadow)
     alias(libs.plugins.javafxpugin)
     id("org.jetbrains.kotlin.jvm")
+    alias(libs.plugins.convention.ghaction.version)
 }
 
 group = "io.github.hizumiaoba"
@@ -161,4 +163,12 @@ tasks.jlinkZip {
 
 kotlin {
     jvmToolchain(17)
+}
+
+tasks.named("clean") {
+    dependsOn(gradle.includedBuild("build-logic").task(":works:clean"))
+}
+
+tasks.named<OutputDefinedVersionForGitHubActionsTask>("outputDefinedVersionForGitHubActions") {
+    version.set(project.version.toString())
 }

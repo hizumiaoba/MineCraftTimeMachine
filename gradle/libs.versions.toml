@@ -34,3 +34,5 @@ jlink = { id = "org.beryx.jlink", version = "3.1.1" }
 javafxpugin = { id = "org.openjfx.javafxplugin", version = "0.1.0" }
 moduleplugin = { id = "org.javamodularity.moduleplugin", version = "1.8.15" }
 shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
+
+convention-ghaction-version = { id = "convention.ghactions.version", version = "unspecified" }

@@ -15,3 +15,4 @@ develocity {
 }
 rootProject.name = "mctimemachine"
 include("app")
+includeBuild("build-logic")
