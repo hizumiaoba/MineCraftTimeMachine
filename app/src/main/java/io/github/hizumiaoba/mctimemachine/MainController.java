@@ -422,7 +422,7 @@ public class MainController {
     runConcurrentTask(es, () -> {
       log.trace("Opening browser to access the git repository.");
       try {
-        Desktop.getDesktop().browse(URI.create("https://github.com/hizumiaoba/MineCraftTimeMachine/issues"));
+        Desktop.getDesktop().browse(URI.create("https://mctimemachine.youtrack.cloud/form/4e4b584c-2709-425a-8eb4-e3125fa27b95"));
       } catch (IOException e) {
         ExceptionPopup popup = new ExceptionPopup(e, "ブラウザを開けませんでした。", "MainController#onSendFeedbackBtnClick()$lambda");
         popup.pop();

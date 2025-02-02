@@ -32,7 +32,7 @@ Details:
 
 任意の場所で `MinecraftTimeMachine.exe` を実行するだけ！
 
-詳しい説明や、設定画面については、[wiki](https://github.com/hizumiaoba/MinecraftTimeMachine/wiki)
+詳しい説明や、設定画面については、[wiki](https://mctimemachine.youtrack.cloud/articles/HELP-A-2/Welcome-to-MineCraftTimeMachine-Wiki)
 をご覧ください！
 
 ## ダウンロード
@@ -69,8 +69,8 @@ PRを贈る際は、以下の点にご注意ください。
 - 自動生成などでも構いませんので、PR本文に変更点の詳細などをご記入ください。
 - PRを向ける先は `develop` ブランチです。
 
-PRを作るまでもない、小さな誤字報告などは [Issues](https://github.com/hizumiaoba/MinecraftTimeMachine/issues)
-や [Discussions](https://github.com/hizumiaoba/MinecraftTimeMachine/discussions) もご活用ください。
+PRを作るまでもない、小さな誤字報告などは [Issues](https://mctimemachine.youtrack.cloud/issues)
+や [Helpdesk](https://mctimemachine.youtrack.cloud/form/4e4b584c-2709-425a-8eb4-e3125fa27b95) もご活用ください。
 
 ## ライセンス
 
@@ -80,16 +80,16 @@ PRを作るまでもない、小さな誤字報告などは [Issues](https://git
 
 ## ロードマップ
 
-[Issues](https://github.com/hizumiaoba/MinecraftTimeMachine/issues) にて管理しています。
+[Issues](https://mctimemachine.youtrack.cloud/issues) にて管理しています。
 
 実装してほしい機能などをお持ちの方は是非お気軽にご提案ください！
 
 ## 連絡先
 
-バグ報告や機能追加のリクエストなどは、[Issues](https://github.com/hizumiaoba/MinecraftTimeMachine/issues)
+バグ報告や機能追加のリクエストなどは、[Issues](https://mctimemachine.youtrack.cloud/issues)
 にて受け付けています。
 
-その他の連絡や質問などは、[Discussions](https://github.com/hizumiaoba/MinecraftTimeMachine/discussions)
+その他の連絡や質問などは、[Helpdesk](https://mctimemachine.youtrack.cloud/form/4e4b584c-2709-425a-8eb4-e3125fa27b95)
 にて受け付けています。
 
 ## 謝辞
