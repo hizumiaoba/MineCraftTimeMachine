@@ -46,9 +46,12 @@ public class UpdateModalController {
   private Button checkUpdateBtn;
   @FXML
   ProgressBar downloadProgressBar;
-
   @FXML
   private Button downloadInstallerBtn;
+  @FXML
+  private CheckBox zipDownloadChkbox;
+  @FXML
+  private CheckBox openFolderWhenCompleteChkbox;
 
   private VersionChecker checker;
   private VersionObj clientVersion;
