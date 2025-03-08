@@ -5,7 +5,6 @@ import io.github.hizumiaoba.mctimemachine.api.version.MinimalRemoteVersionCrate.
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import javafx.scene.control.ProgressBar;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ArtifactManager {
 
   private final ArtifactDownloader artifactDownloader;
-  private final ProgressBar downloadProgressBar;
   private final Path savePath;
   private final MinimalRemoteVersionCrate remoteVersionCache;
   private final DownloadProgressListener downloadProgressListener;
