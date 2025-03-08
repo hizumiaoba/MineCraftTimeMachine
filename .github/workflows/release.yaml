@@ -11,6 +11,7 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Create new Release with gh release
         run: gh release create --draft --generate-notes $TAG_REF --title "Release $TAG_REF"
         env:
