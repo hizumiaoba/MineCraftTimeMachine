@@ -1,15 +1,16 @@
 package io.github.hizumiaoba.mctimemachine;
 
 import io.github.hizumiaoba.mctimemachine.api.Version;
+import io.github.hizumiaoba.mctimemachine.api.fs.ArtifactDownloader;
+import io.github.hizumiaoba.mctimemachine.api.fs.ArtifactManager;
+import io.github.hizumiaoba.mctimemachine.api.fs.DownloadProgressListener;
 import io.github.hizumiaoba.mctimemachine.api.version.MinimalRemoteVersionCrate;
 import io.github.hizumiaoba.mctimemachine.api.version.VersionChecker;
 import io.github.hizumiaoba.mctimemachine.internal.version.VersionObj;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Objects;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -20,21 +21,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.CipherSuite;
 import okhttp3.ConnectionSpec;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 import okhttp3.TlsVersion;
-import okio.Buffer;
-import okio.BufferedSink;
-import okio.BufferedSource;
-import okio.Okio;
-import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 public class UpdateModalController {
@@ -143,7 +135,32 @@ public class UpdateModalController {
       .followRedirects(true)
       .followSslRedirects(true)
       .build();
-    Platform.runLater(() -> download(Paths.get("tmp"), okhttpClient));
+    final ArtifactDownloader downloader = new ArtifactDownloader(okhttpClient);
+    final ArtifactManager manager = new ArtifactManager(
+      downloader,
+      Paths.get("tmp"),
+      remoteVersionCache,
+      new DownloadProgressImpl(this.downloadProgressBar, openFolderWhenCompleteChkbox.isSelected())
+    );
+    final boolean preferZip = zipDownloadChkbox.isSelected();
+    Platform.runLater(() -> {
+      downloadProgressBar.setProgress(0);
+      downloadProgressBar.setVisible(true);
+    });
+    try {
+      if(preferZip) {
+        manager.startZipDownload();
+      } else {
+        manager.startInstallerDownload();
+      }
+    } catch (IOException ex) {
+      log.error("Failed to download artifact", ex);
+      Alert alert = new Alert(Alert.AlertType.ERROR);
+      alert.setTitle("エラー");
+      alert.setHeaderText("インストーラのダウンロードに失敗しました");
+      alert.initModality(Modality.APPLICATION_MODAL);
+      alert.showAndWait();
+    }
   }
 
   @FXML
@@ -172,81 +189,65 @@ public class UpdateModalController {
     }
   }
 
-  private void download(Path savePath, OkHttpClient okhttpClient) {
-    try {
-      Files.createDirectories(savePath);
-    } catch (IOException e) {
-      log.error("Failed to create directories: {}", savePath, e);
-      throw new RuntimeException(e);
+  @RequiredArgsConstructor
+  static class DownloadProgressImpl implements DownloadProgressListener {
+
+    private final ProgressBar progressBar;
+    private final boolean openFolderWhenComplete;
+
+    @Override
+    public void onProgress(long bytesRead, long contentLength) {
+      final double progress = (double) bytesRead / contentLength;
+      Platform.runLater(() -> progressBar.setProgress(progress));
     }
-    String downloadUrl = remoteVersionCache.getAssets().
-      parallelStream()
-      .filter(e -> e.getName().endsWith(".msi"))
-      .findFirst()
-      .orElseThrow(() -> new RuntimeException("Failed to find installer"))
-      .getDownloadUrl();
-    Request request = new Request.Builder()
-      .url(downloadUrl)
-      .build();
-    okhttpClient
-      .newCall(request)
-      .enqueue(new Callback() {
-        @Override
-        public void onFailure(@NotNull Call call, @NotNull IOException e) {
-          log.error("Client-side error has occurred to enqueue the request to: {}", call.request().url(), e);
+
+    @Override
+    public void onComplete(String fileName, Path savePath) {
+      if (openFolderWhenComplete) {
+        try {
+          java.awt.Desktop.getDesktop().open(savePath.getParent().toFile());
+        } catch (IOException e) {
+          log.error("Failed to open the download folder", e);
+        }
+      }
+      Platform.runLater(() -> {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("完了");
+        alert.setHeaderText("インストーラのダウンロードが完了しました");
+        alert.setContentText("ダウンロード先: " + savePath);
+        alert.initModality(Modality.APPLICATION_MODAL);
+        alert.showAndWait();
+      });
+    }
+
+    @Override
+    public void onError(Exception e, String fileName, Path savePath) {
+      if (fileName.equals("null")) {
+        // means that the error occurred in client-side
+        Platform.runLater(() -> {
           Alert alert = new Alert(Alert.AlertType.ERROR);
           alert.setTitle("エラー");
           alert.setHeaderText("インストーラのダウンロードに失敗しました");
-          alert.setContentText("クライアント側のエラーが発生しました。この症状が継続する場合は、開発者に報告してください。");
+          alert.setContentText(
+            "クライアント側のエラーが発生しました。この症状が継続する場合は、開発者に報告してください。");
           alert.initModality(Modality.APPLICATION_MODAL);
           alert.showAndWait();
-        }
-
-        @Override
-        public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-          if(!response.isSuccessful()) {
-            log.error("Server has responded with an error {}: {}", response.code(), response.message());
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("エラー");
-            alert.setHeaderText("インストーラのダウンロードに失敗しました");
-            alert.setContentText("サーバー側のエラーが発生しました。インターネット環境、またはサーバーの状態を確認してください。");
-            alert.initModality(Modality.APPLICATION_MODAL);
-            alert.showAndWait();
-          }
-          ResponseBody body = Objects.requireNonNull(response.body(), "Response body is null");
-          long contentLength = body.contentLength();
-          BufferedSource source = body.source();
-
-          String installerName = remoteVersionCache.getAssets().parallelStream()
-            .filter(e -> e.getName().endsWith(".msi"))
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("Failed to find installer"))
-            .getName();
-          BufferedSink sink = Okio.buffer(Okio.sink(savePath.resolve(installerName).toFile()));
-          Buffer sinkBuffer = sink.getBuffer();
-
-          long totalBytesRead = 0;
-          int bufferSize = 8 * 1024;
-          for (long bytesRead; (bytesRead = source.read(sinkBuffer, bufferSize)) != -1; ) {
-            sink.emit();
-            totalBytesRead += bytesRead;
-            final double progress = (double) totalBytesRead / contentLength;
-            Platform.runLater(() -> downloadProgressBar.setProgress(progress));
-          }
-          sink.flush();
-          sink.close();
-          source.close();
-          Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("完了");
-            alert.setHeaderText("インストーラのダウンロードが完了しました");
-            alert.setContentText("ダウンロード先: " + savePath);
-            alert.initModality(Modality.APPLICATION_MODAL);
-            alert.showAndWait();
-          });
-        }
+        });
+        return;
+      }
+      // below is the server-side error
+      final String message = e.getMessage();
+      log.error(message);
+      log.error("Error in about to download {} into {}", fileName, savePath.toAbsolutePath(), e);
+      Platform.runLater(() -> {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("エラー");
+        alert.setHeaderText("インストーラのダウンロードに失敗しました");
+        alert.setContentText(
+          "サーバー側のエラーが発生しました。インターネット環境、またはサーバーの状態を確認してください。");
+        alert.initModality(Modality.APPLICATION_MODAL);
+        alert.showAndWait();
       });
-
+    }
   }
-
 }
