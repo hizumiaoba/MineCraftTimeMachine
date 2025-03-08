@@ -1,5 +1,6 @@
 package io.github.hizumiaoba.mctimemachine.fs;
 
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -10,9 +11,10 @@ import io.github.hizumiaoba.mctimemachine.api.fs.ArtifactManager;
 import io.github.hizumiaoba.mctimemachine.api.fs.DownloadProgressListener;
 import io.github.hizumiaoba.mctimemachine.api.version.MinimalRemoteVersionCrate;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import javafx.scene.control.ProgressBar;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -23,9 +25,6 @@ public class ArtifactManagerTest {
 
   @Mock
   private ArtifactDownloader fileDownloader;
-
-  @Mock
-  private ProgressBar downloadProgressBar;
 
   @Mock
   private MinimalRemoteVersionCrate remoteVersionCache;
@@ -39,7 +38,16 @@ public class ArtifactManagerTest {
     MockitoAnnotations.openMocks(this);
     savePath = Path.of("test-download");
     this.listenerCaptor = ArgumentCaptor.forClass(DownloadProgressListener.class);
-    downloadManager = new ArtifactManager(fileDownloader, downloadProgressBar, savePath, remoteVersionCache, listenerCaptor.getValue());
+    downloadManager = new ArtifactManager(fileDownloader, savePath, remoteVersionCache, new TestDownloadProgressListener());
+  }
+
+  @AfterAll
+  public static void tearDown() {
+    try {
+      Files.deleteIfExists(Path.of("test-download"));
+    } catch (IOException e) {
+      fail(e);
+    }
   }
 
   @Test
@@ -71,5 +79,22 @@ public class ArtifactManagerTest {
 
     DownloadProgressListener listener = listenerCaptor.getValue();
     listener.onComplete("test-file.zip", savePath.resolve("test-file.zip"));
+  }
+
+  private static class TestDownloadProgressListener implements DownloadProgressListener {
+    @Override
+    public void onProgress(long bytesRead, long contentLength) {
+      System.out.println("Progress: " + bytesRead + "/" + contentLength);
+    }
+
+    @Override
+    public void onComplete(String fileName, Path savePath) {
+      System.out.println("Download complete: " + fileName + " saved to " + savePath);
+    }
+
+    @Override
+    public void onError(Exception e, String fileName, Path savePath) {
+      System.err.println("Error downloading " + fileName + " to " + savePath + ": " + e.getMessage());
+    }
   }
 }
