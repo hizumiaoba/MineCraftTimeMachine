@@ -203,6 +203,7 @@ public class MainController {
   void onBackupNowBtnClick() {
     runConcurrentTask(es, () -> {
       Platform.runLater(() -> {
+        this.changeBackupButtonState(true);
         backupNowBtn.setStyle(
           "-fx-text-fill: #ff0000; -fx-font-weight: bold;"
         );
@@ -222,6 +223,7 @@ public class MainController {
         popup.pop();
       }
       Platform.runLater(() -> {
+        this.changeBackupButtonState(false);
         backupNowBtn.setStyle("");
         backupNowBtn.setText("いますぐバックアップ");
         backupNowWithShortcutChkbox.setDisable(false);
@@ -412,6 +414,13 @@ public class MainController {
     return f;
   }
 
+  private void changeBackupButtonState(boolean isDisabled) {
+    this.backupNowBtn.setDisable(isDisabled);
+    this.specialBackupNowBtn.setDisable(isDisabled);
+    this.backupScheduledBtn.setDisable(isDisabled);
+    this.openBackupListBtn.setDisable(isDisabled);
+  }
+
   private void assignPath(TextField injected, File target) {
     log.debug("injecting the path: {}", target.getAbsolutePath());
     injected.setText(target.getAbsolutePath());
@@ -434,6 +443,7 @@ public class MainController {
   void onSpecialBackupNowBtnClick() {
     runConcurrentTask(es, () -> {
       Platform.runLater(() -> {
+        this.changeBackupButtonState(true);
         specialBackupNowBtn.setStyle(
           "-fx-text-fill: #ff0000; -fx-font-weight: bold;"
         );
@@ -454,6 +464,7 @@ public class MainController {
         popup.pop();
       }
       Platform.runLater(() -> {
+        this.changeBackupButtonState(false);
         specialBackupNowBtn.setStyle("");
         specialBackupNowBtn.setText("いますぐ特殊バックアップ");
         backupNowWithShortcutChkbox.setDisable(false);
