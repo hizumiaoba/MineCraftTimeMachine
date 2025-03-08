@@ -65,22 +65,6 @@ jobs:
         uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
       - name: Grant execution permission for wrapper file
         run: chmod +x ./gradlew ./gradlew.bat
-#        Windows specific steps
-      - name: Install Winget
-        if: ${{ matrix.os == 'windows-latest' }}
-        uses: Cyberboss/install-winget@v1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: install WiX Toolset for windows
-        if: ${{ matrix.os == 'windows-latest' }}
-        run: winget install --exact --id WiXToolset.WiXToolset --silent --disable-interactivity --accept-package-agreements --accept-source-agreements --source winget
-#        Ubuntu specific steps
-      - name: Install fakeroot only for ubuntu
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        run: sudo apt-get install -y fakeroot
-#        MacOS specific steps
-#        Do nothing since we don't sign up to Apple developer program.
-#        And we cannot set app icon for macOS app.
       - name: Gradle build action
         uses: gradle/gradle-build-action@v2
         with:
