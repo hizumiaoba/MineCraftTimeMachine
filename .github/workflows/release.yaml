@@ -72,7 +72,7 @@ jobs:
             jpackage
             --stacktrace
       - name: Upload artifact to release draft with gh release
-        run: gh release upload $TAG_REF build/libs/MinecraftTimeMachine-*
+        run: gh release upload $TAG_REF app/build/jpackage/MinecraftTimeMachine-*
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_REF: ${{ github.ref }}
