@@ -71,8 +71,21 @@ jobs:
           arguments: |
             jpackage
             --stacktrace
-      - name: Upload artifact to release draft with gh release
-        run: gh release upload $TAG_REF app/build/jpackage/MinecraftTimeMachine-*
+      - name: Extract version from tag
+        id: extract-version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Set file extension
+        id: set-extension
+        run: |
+            if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+              echo "FILE_EXT=msi" >> $GITHUB_ENV
+            elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+              echo "FILE_EXT=deb" >> $GITHUB_ENV
+            elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+              echo "FILE_EXT=dmg" >> $GITHUB_ENV
+            fi
+      - name: Upload artifact to release draft
+        run: gh release upload ${GITHUB_REF#refs/tags/} app/build/jpackage/MinecraftTimeMachine-${{ env.VERSION }}.${{ env.FILE_EXT }} --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_REF: ${{ github.ref }}
