@@ -5,6 +5,7 @@ import io.github.hizumiaoba.mctimemachine.api.version.MinimalRemoteVersionCrate.
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,7 +19,33 @@ public class ArtifactManager {
   private final DownloadProgressListener downloadProgressListener;
 
   public void startInstallerDownload() throws IOException {
-    this.startDownload(".msi");
+    OS os = OS.getInstance();
+    this.startDownload(os.getFileExtension());
+  }
+
+  @Getter
+  private enum OS {
+    WINDOWS("windows", ".msi"),
+    LINUX("linux", ".deb"),
+    MAC("mac", ".dmg");
+    private final String envIdentifier;
+    private final String fileExtension;
+    OS(String envIdentifier, String fileExtension) {
+      this.envIdentifier = envIdentifier;
+      this.fileExtension = fileExtension;
+    }
+    static OS getInstance() {
+      String osName = System.getProperty("os.name", "unknown").toLowerCase();
+      if (osName.contains("windows")) {
+        return WINDOWS;
+      } else if (osName.contains("mac")) {
+        return MAC;
+      } else if (osName.contains("nix") || osName.contains("nux") || osName.contains("aix")) {
+        return LINUX;
+      } else {
+        throw new IllegalStateException("Unsupported OS: " + osName);
+      }
+    }
   }
 
   public void startZipDownload() throws IOException {
