@@ -77,7 +77,7 @@ tasks.withType<Test> {
 }
 
 jlink {
-    imageZip.set(project.file("${buildDir}/distributions/app-${javafx.platform.classifier}.zip"))
+    imageZip.set(project.file("${layout.buildDirectory}/distributions/app-${javafx.platform.classifier}.zip"))
     options.set(
         mutableListOf(
             "--strip-debug",
