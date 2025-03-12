@@ -13,6 +13,7 @@ import io.github.hizumiaoba.mctimemachine.api.version.MinimalRemoteVersionCrate;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +43,18 @@ public class ArtifactManagerTest {
   @AfterAll
   public static void tearDown() {
     try {
-      Files.deleteIfExists(Path.of("test-download"));
+      Path directory = Path.of("test-download");
+      if(Files.exists(directory)) {
+        Files.walk(directory)
+        .sorted(Comparator.reverseOrder())
+        .forEach(path -> {
+          try {
+            Files.deleteIfExists(path);
+          } catch (IOException e) {
+            fail(e);
+          }
+        });
+      }
     } catch (IOException e) {
       fail(e);
     }
