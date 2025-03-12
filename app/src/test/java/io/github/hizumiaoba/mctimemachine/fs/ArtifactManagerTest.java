@@ -50,19 +50,29 @@ public class ArtifactManagerTest {
     }
   }
 
+  private String getInstallerExtension() {
+    String osName = System.getProperty("os.name", "unknown").toLowerCase();
+    if (osName.contains("windows")) return ".msi";
+    else if (osName.contains("mac")) return ".dmg";
+    else if (osName.contains("nix") || osName.contains("nux") || osName.contains("aix")) return ".deb";
+    else throw new IllegalStateException("Unsupported OS: " + osName);
+  }
+
   @Test
   public void testStartInstallerDownload() throws IOException {
+    String ext = getInstallerExtension();
     MinimalRemoteVersionCrate.AssetsCrate asset = mock(MinimalRemoteVersionCrate.AssetsCrate.class);
-    when(asset.getName()).thenReturn("test-installer.msi");
-    when(asset.getDownloadUrl()).thenReturn("http://example.com/test-installer.msi");
+    when(asset.getName()).thenReturn("test-installer" + ext);
+    when(asset.getDownloadUrl()).thenReturn("http://example.com/test-installer" + ext);
     when(remoteVersionCache.getAssets()).thenReturn(List.of(asset));
 
     downloadManager.startInstallerDownload();
 
-    verify(fileDownloader).downloadArtifact(eq("http://example.com/test-installer.msi"), eq(savePath.resolve("test-installer.msi")), listenerCaptor.capture());
+    verify(fileDownloader).downloadArtifact(eq("http://example.com/test-installer" + ext),
+            eq(savePath.resolve("test-installer" + ext)), listenerCaptor.capture());
 
     DownloadProgressListener listener = listenerCaptor.getValue();
-    listener.onComplete("test-installer.msi", savePath.resolve("test-installer.msi"));
+    listener.onComplete("test-installer" + ext, savePath.resolve("test-installer" + ext));
   }
 
   @Test
@@ -75,7 +85,8 @@ public class ArtifactManagerTest {
     downloadManager.startZipDownload();
 
     ArgumentCaptor<DownloadProgressListener> listenerCaptor = ArgumentCaptor.forClass(DownloadProgressListener.class);
-    verify(fileDownloader).downloadArtifact(eq("http://example.com/test-file.zip"), eq(savePath.resolve("test-file.zip")), listenerCaptor.capture());
+    verify(fileDownloader).downloadArtifact(eq("http://example.com/test-file.zip"),
+            eq(savePath.resolve("test-file.zip")), listenerCaptor.capture());
 
     DownloadProgressListener listener = listenerCaptor.getValue();
     listener.onComplete("test-file.zip", savePath.resolve("test-file.zip"));
