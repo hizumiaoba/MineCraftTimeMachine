@@ -24,7 +24,9 @@
                <children>
                   <Label text="バージョンチェックを行い、新しいバージョンがある場合はインストーラを取得します。" />
                   <Label fx:id="versionInfoLabel" text="未チェック" />
-                  <CheckBox text="不安定なプレリリース版を優先する" fx:id="prereleaseChkbox" mnemonicParsing="false" />
+                  <CheckBox fx:id="prereleaseChkbox" mnemonicParsing="false" text="不安定なプレリリース版を優先する" />
+                  <CheckBox fx:id="zipDownloadChkbox" mnemonicParsing="false" text="zipファイルをダウンロードする" />
+                  <CheckBox fx:id="openFolderWhenCompleteChkbox" mnemonicParsing="false" selected="true" text="ダウンロード完了後フォルダを表示する" />
                </children>
             </VBox>
             <AnchorPane VBox.vgrow="NEVER">
