@@ -5,6 +5,7 @@ import io.github.hizumiaoba.mctimemachine.api.version.MinimalRemoteVersionCrate.
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,12 +60,16 @@ public class ArtifactManager {
       log.error("Failed to create directories for saving artifact", e);
       return;
     }
-
-    AssetsCrate asset = remoteVersionCache.getAssets()
+    
+    Optional<AssetsCrate> optAsset = remoteVersionCache.getAssets()
       .parallelStream()
       .filter(e -> e.getName().endsWith(fileExtension))
-      .findFirst()
-      .orElseThrow(() -> new RuntimeException("No artifact found"));
+      .findFirst();
+    if (!optAsset.isPresent()) {
+      this.downloadProgressListener.onError(new Exception("No Artifact found for: " + fileExtension), "NoArtifactFound", savePath);
+      return;
+    }
+    AssetsCrate asset = optAsset.get();
 
     String downloadUrl = asset.getDownloadUrl();
     String installerName = asset.getName();

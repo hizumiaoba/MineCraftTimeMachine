@@ -224,6 +224,17 @@ public class UpdateModalController {
 
     @Override
     public void onError(Exception e, String fileName, Path savePath) {
+      if ("NoArtifactFound".equals(fileName)) {
+        Platform.runLater(() -> {
+          Alert alert = new Alert(Alert.AlertType.ERROR);
+          alert.setTitle("エラー");
+          alert.setHeaderText("ファイルが見つかりません");
+          alert.setContentText("指定されたファイルが存在しませんでした。");
+          alert.initModality(Modality.APPLICATION_MODAL);
+          alert.showAndWait();
+        });
+        return;
+      }
       if (fileName.equals("null")) {
         // means that the error occurred in client-side
         Platform.runLater(() -> {
