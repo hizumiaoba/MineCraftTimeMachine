@@ -155,11 +155,13 @@ public class UpdateModalController {
       }
     } catch (IOException ex) {
       log.error("Failed to download artifact", ex);
-      Alert alert = new Alert(Alert.AlertType.ERROR);
-      alert.setTitle("エラー");
-      alert.setHeaderText("インストーラのダウンロードに失敗しました");
-      alert.initModality(Modality.APPLICATION_MODAL);
-      alert.showAndWait();
+      Platform.runLater(() -> {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("エラー");
+        alert.setHeaderText("インストーラのダウンロードに失敗しました");
+        alert.initModality(Modality.APPLICATION_MODAL);
+        alert.showAndWait();
+      });
     }
   }
 
