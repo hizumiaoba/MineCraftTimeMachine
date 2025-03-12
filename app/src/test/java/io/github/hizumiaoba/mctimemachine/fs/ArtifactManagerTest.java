@@ -29,7 +29,6 @@ public class ArtifactManagerTest {
   @Mock
   private MinimalRemoteVersionCrate remoteVersionCache;
 
-  private ArgumentCaptor<DownloadProgressListener> listenerCaptor;
   private ArtifactManager downloadManager;
   private Path savePath;
 
@@ -37,7 +36,6 @@ public class ArtifactManagerTest {
   public void setUp() {
     MockitoAnnotations.openMocks(this);
     savePath = Path.of("test-download");
-    this.listenerCaptor = ArgumentCaptor.forClass(DownloadProgressListener.class);
     downloadManager = new ArtifactManager(fileDownloader, savePath, remoteVersionCache, new TestDownloadProgressListener());
   }
 
@@ -68,6 +66,7 @@ public class ArtifactManagerTest {
 
     downloadManager.startInstallerDownload();
 
+    ArgumentCaptor<DownloadProgressListener> listenerCaptor = ArgumentCaptor.forClass(DownloadProgressListener.class);
     verify(fileDownloader).downloadArtifact(eq("http://example.com/test-installer" + ext),
             eq(savePath.resolve("test-installer" + ext)), listenerCaptor.capture());
 
