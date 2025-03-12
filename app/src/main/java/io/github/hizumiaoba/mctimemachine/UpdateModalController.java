@@ -138,7 +138,7 @@ public class UpdateModalController {
     final ArtifactDownloader downloader = new ArtifactDownloader(okhttpClient);
     final ArtifactManager manager = new ArtifactManager(
       downloader,
-      Paths.get("tmp"),
+      Paths.get("updates"),
       remoteVersionCache,
       new DownloadProgressImpl(this.downloadProgressBar, openFolderWhenCompleteChkbox.isSelected())
     );
