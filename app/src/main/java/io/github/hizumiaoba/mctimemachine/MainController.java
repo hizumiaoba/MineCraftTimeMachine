@@ -7,21 +7,19 @@ import io.github.hizumiaoba.mctimemachine.api.Config;
 import io.github.hizumiaoba.mctimemachine.api.ExceptionPopup;
 import io.github.hizumiaoba.mctimemachine.internal.ApplicationConfig;
 import io.github.hizumiaoba.mctimemachine.internal.concurrent.ConcurrentThreadFactory;
-import io.github.hizumiaoba.mctimemachine.internal.fs.BackupUtils;
 import io.github.hizumiaoba.mctimemachine.internal.natives.NativeHandleUtil;
+import io.github.hizumiaoba.mctimemachine.service.BackupService;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -43,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MainController {
-
 
   @FXML
   private ResourceBundle resources;
@@ -124,15 +121,10 @@ public class MainController {
   private static final ExecutorService es;
   private static final ThreadFactory internalControllerThreadFactory = new ConcurrentThreadFactory(
     "Internal", "Controller", true);
-  private static final ScheduledExecutorService backupSchedulerExecutors;
-  private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
-  private static ScheduledFuture<?> backupScheduledFuture;
-  static BackupUtils backupUtils;
+  private BackupService backupService;
 
   static {
     es = Executors.newCachedThreadPool(new ConcurrentThreadFactory("Main GUI", "Controller", true));
-    backupSchedulerExecutors = Executors.newSingleThreadScheduledExecutor(
-      new ConcurrentThreadFactory("Backup", "Scheduler", true));
   }
 
   @FXML
@@ -158,7 +150,6 @@ public class MainController {
         enableAutoBackupOnQuittingGamesChkbox.isSelected() ? "true" : "false");
       mainConfig.save();
       es.shutdownNow();
-      backupSchedulerExecutors.shutdownNow();
     }));
 
     int MOD_CTRL_SHIFT = JIntellitype.MOD_CONTROL + JIntellitype.MOD_SHIFT;
@@ -188,90 +179,77 @@ public class MainController {
       Boolean.parseBoolean(mainConfig.load("exit_on_quitting_minecraft")));
     enableAutoBackupOnQuittingGamesChkbox.setSelected(
       Boolean.parseBoolean(mainConfig.load("backup_on_quitting_minecraft")));
-    backupUtils = new BackupUtils(backupSavingFolderPathField.getText(), savesFolderPathField.getText());
-  }
-
-  private void checkPath() {
-    if (!backupUtils.getBackupPath()
-      .equals(Paths.get(this.backupSavingFolderPathField.getText()))) {
-      log.debug("Backup path has been changed.");
-      backupUtils.setBackupPath(this.backupSavingFolderPathField.getText());
-    }
+    
+    // BackupServiceのインスタンス化
+    backupService = new BackupService(backupSavingFolderPathField.getText(), savesFolderPathField.getText());
+    
+    // シャットダウンフックにBackupServiceのシャットダウン処理を追加
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      if (backupService != null) {
+        backupService.shutdown();
+        BackupService.getBackupSchedulerExecutors().shutdownNow();
+      }
+    }));
   }
 
   @FXML
   void onBackupNowBtnClick() {
     runConcurrentTask(es, () -> {
-      Platform.runLater(() -> {
-        this.changeBackupButtonState(true);
-        backupNowBtn.setStyle(
-          "-fx-text-fill: #ff0000; -fx-font-weight: bold;"
-        );
-        backupNowBtn.setText("バックアップ中…");
-        backupNowWithShortcutChkbox.setDisable(true);
-        specialBackupNowWithShortcutChkbox.setDisable(true);
-      });
-      checkPath();
-      backupUtils.createBackupDir();
-      try {
-        backupUtils.backup(
-          false,
-          backupCountSpinner.getValue());
-      } catch (IOException e) {
-        ExceptionPopup popup = new ExceptionPopup(e, "バックアップを作成できませんでした。",
-          "MainController#onBackupNowBtnClick()$lambda");
-        popup.pop();
-      }
-      Platform.runLater(() -> {
-        this.changeBackupButtonState(false);
-        backupNowBtn.setStyle("");
-        backupNowBtn.setText("いますぐバックアップ");
-        backupNowWithShortcutChkbox.setDisable(false);
-        specialBackupNowWithShortcutChkbox.setDisable(false);
-      });
+      backupService.updateBackupPath(backupSavingFolderPathField.getText());
+      backupService.createNormalBackup(
+        backupCountSpinner.getValue(),
+        (started) -> Platform.runLater(() -> {
+          changeBackupButtonState(true);
+          backupNowBtn.setStyle("-fx-text-fill: #ff0000; -fx-font-weight: bold;");
+          backupNowBtn.setText("バックアップ中…");
+          backupNowWithShortcutChkbox.setDisable(true);
+          specialBackupNowWithShortcutChkbox.setDisable(true);
+        }),
+        (completed) -> Platform.runLater(() -> {
+          changeBackupButtonState(false);
+          backupNowBtn.setStyle("");
+          backupNowBtn.setText("いますぐバックアップ");
+          backupNowWithShortcutChkbox.setDisable(false);
+          specialBackupNowWithShortcutChkbox.setDisable(false);
+        })
+      );
     });
   }
 
   @FXML
   void onBackupScheduledBtnClick() {
     runConcurrentTask(es, () -> {
-      checkPath();
-      backupUtils.createBackupDir();
-      if (backupScheduledFuture == null) {
-        log.trace("Guessed that the backup scheduler is not running.");
-        backupScheduledFuture = backupSchedulerExecutors.scheduleAtFixedRate(
-          () -> {
-            log.trace("Backup scheduler is running.");
-            onBackupNowBtnClick();
-          }, backupScheduleDurationSpinner.getValue(),
-          backupScheduleDurationSpinner.getValue(), TimeUnit.MINUTES);
-        Platform.runLater(() -> {
-          backupScheduledBtn.setText("定期バックアップ中！");
-          backupScheduledBtn.setStyle(
-            "-fx-background-color: #ff0000; -fx-text-fill: #fff; -fx-font-weight: bold;");
-        });
-      } else {
-        log.trace("Guessed that the backup scheduler is running.");
-        if (backupScheduledFuture.cancel(false)) {
-          log.debug("Backup scheduler could be canceled.");
-        }
-        Platform.runLater(() -> {
-          backupScheduledBtn.setStyle("");
-          backupScheduledBtn.setText("定期バックアップ開始");
-        });
-        backupScheduledFuture = null;
-      }
+      backupService.updateBackupPath(backupSavingFolderPathField.getText());
+      boolean isStarted = backupService.scheduleBackup(
+        backupScheduleDurationSpinner.getValue(),
+        () -> {
+          log.trace("Backup scheduler is running.");
+          onBackupNowBtnClick();
+        },
+        (isActive) -> Platform.runLater(() -> {
+          if (isActive) {
+            backupScheduledBtn.setText("定期バックアップ中！");
+            backupScheduledBtn.setStyle("-fx-background-color: #ff0000; -fx-text-fill: #fff; -fx-font-weight: bold;");
+          } else {
+            backupScheduledBtn.setStyle("");
+            backupScheduledBtn.setText("定期バックアップ開始");
+          }
+        })
+      );
     });
   }
 
   @FXML
   void onOpenBackupListBtnClick() throws IOException {
     log.trace("Opening the backup list.");
-    // open new dialog with `manager.fxml`
     FXMLLoader loader = new FXMLLoader(
       MineCraftTimeMachineApplication.class.getResource("manager.fxml"));
     Stage managerDialogStage = new Stage();
     managerDialogStage.setScene(new Scene(loader.load()));
+    
+    BackupManagerController managerController = loader.getController();
+    managerController.setBackupService(backupService);
+    
     managerDialogStage.initModality(Modality.APPLICATION_MODAL);
     managerDialogStage.showAndWait();
   }
@@ -300,38 +278,42 @@ public class MainController {
     runConcurrentTask(es, () -> {
       log.trace("create external process to open the launcher.");
       log.trace("launcher path: {}", launcherExePathField.getText());
+      AtomicBoolean atomicEnableAutoBackupOnQuittingGames = new AtomicBoolean(
+        enableAutoBackupOnQuittingGamesChkbox.isSelected());
+      AtomicBoolean atomicEnableAutoExitOnQuittingGames = new AtomicBoolean(
+        enableAutoExitOnQuittingGamesChkbox.isSelected());
+      Platform.runLater(() -> {
+        enableAutoBackupOnQuittingGamesChkbox.setDisable(true);
+        enableAutoExitOnQuittingGamesChkbox.setDisable(true);
+      });
+      boolean triggerAutomation =
+        atomicEnableAutoBackupOnQuittingGames.get() || atomicEnableAutoExitOnQuittingGames.get();
       try {
         Runtime.getRuntime().exec(launcherExePathField.getText());
-        AtomicBoolean atomicEnableAutoBackupOnQuittingGames = new AtomicBoolean(enableAutoBackupOnQuittingGamesChkbox.isSelected());
-        AtomicBoolean atomicEnableAutoExitOnQuittingGames = new AtomicBoolean(enableAutoExitOnQuittingGamesChkbox.isSelected());
-        Platform.runLater(() -> {
-          enableAutoBackupOnQuittingGamesChkbox.setDisable(true);
-          enableAutoExitOnQuittingGamesChkbox.setDisable(true);
-        });
-        boolean triggerAutomation = atomicEnableAutoBackupOnQuittingGames.get() || atomicEnableAutoExitOnQuittingGames.get();
-        if(triggerAutomation) {
-          boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
+        if (triggerAutomation) {
+          ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor(new ConcurrentThreadFactory("MainController", "process-killer-scheduled", true));
+          final boolean isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
           log.debug("Scheduling to kill the program after 3 minutes.");
-          Executors
-            .newSingleThreadScheduledExecutor(new ConcurrentThreadFactory("MainController", "process-killer-scheduled", true))
-            .schedule(() -> {
-              Optional<ProcessHandle> handle = isWindows ? NativeHandleUtil.getMinecraftProcessId() : NativeHandleUtil.getMinecraftProcess();
-              handle.ifPresentOrElse(h -> {
-                log.debug("scheduling to kill the program");
-                h.onExit()
-                  .thenRun(() -> {
-                    log.debug("Minecraft process has been exited.");
-                    onMinecraftProcessExit(atomicEnableAutoBackupOnQuittingGames.get(), atomicEnableAutoExitOnQuittingGames.get());
-                  });
-              }, () -> log.warn("No Minecraft process was found."));
-              Platform.runLater(() -> {
-                enableAutoBackupOnQuittingGamesChkbox.setDisable(false);
-                enableAutoExitOnQuittingGamesChkbox.setDisable(false);
+          scheduledExecutor.schedule(() -> {
+            Optional<ProcessHandle> handle = isWindows ? NativeHandleUtil.getMinecraftProcessId()
+              : NativeHandleUtil.getMinecraftProcess();
+            handle.ifPresentOrElse(it -> {
+              log.debug("scheduling to kill the program");
+              it.onExit().thenRun(() -> {
+                log.debug("Minecraft process has been exited.");
+                onMinecraftProcessExit(atomicEnableAutoBackupOnQuittingGames.get(),
+                  atomicEnableAutoExitOnQuittingGames.get());
               });
-            }, 3, TimeUnit.MINUTES);
+            }, () -> log.warn("No Minecraft process was found."));
+            Platform.runLater(() -> {
+              enableAutoBackupOnQuittingGamesChkbox.setDisable(false);
+              enableAutoExitOnQuittingGamesChkbox.setDisable(false);
+            });
+          }, 3, TimeUnit.MINUTES);
         }
       } catch (IOException e) {
-        ExceptionPopup popup = new ExceptionPopup(e, "外部プロセスを開始できませんでした。", "MainController#onOpenLauncherBtnClick()$lambda");
+        ExceptionPopup popup = new ExceptionPopup(e, "外部プロセスを開始できませんでした。",
+          "MainController#onOpenLauncherBtnClick()$lambda");
         popup.pop();
       }
     });
@@ -442,35 +424,24 @@ public class MainController {
   @FXML
   void onSpecialBackupNowBtnClick() {
     runConcurrentTask(es, () -> {
-      Platform.runLater(() -> {
-        this.changeBackupButtonState(true);
-        specialBackupNowBtn.setStyle(
-          "-fx-text-fill: #ff0000; -fx-font-weight: bold;"
-        );
-        specialBackupNowBtn.setText("特殊バックアップ中…");
-        backupNowWithShortcutChkbox.setDisable(true);
-        specialBackupNowWithShortcutChkbox.setDisable(true);
-      });
-      checkPath();
-      backupUtils.createBackupDir();
-      log.info("Starting special backup...");
-      try {
-        backupUtils.backup(
-          true,
-          backupCountSpinner.getValue());
-      } catch (IOException e) {
-        ExceptionPopup popup = new ExceptionPopup(e, "特殊バックアップを作成できませんでした。",
-          "MainController#onSpecialBackupNowBtnClick()$lambda");
-        popup.pop();
-      }
-      Platform.runLater(() -> {
-        this.changeBackupButtonState(false);
-        specialBackupNowBtn.setStyle("");
-        specialBackupNowBtn.setText("いますぐ特殊バックアップ");
-        backupNowWithShortcutChkbox.setDisable(false);
-        specialBackupNowWithShortcutChkbox.setDisable(false);
-      });
-      log.info("Special backup completed.");
+      backupService.updateBackupPath(backupSavingFolderPathField.getText());
+      backupService.createSpecialBackup(
+        backupCountSpinner.getValue(),
+        (started) -> Platform.runLater(() -> {
+          changeBackupButtonState(true);
+          specialBackupNowBtn.setStyle("-fx-text-fill: #ff0000; -fx-font-weight: bold;");
+          specialBackupNowBtn.setText("特殊バックアップ中…");
+          backupNowWithShortcutChkbox.setDisable(true);
+          specialBackupNowWithShortcutChkbox.setDisable(true);
+        }),
+        (completed) -> Platform.runLater(() -> {
+          changeBackupButtonState(false);
+          specialBackupNowBtn.setStyle("");
+          specialBackupNowBtn.setText("いますぐ特殊バックアップ");
+          backupNowWithShortcutChkbox.setDisable(false);
+          specialBackupNowWithShortcutChkbox.setDisable(false);
+        })
+      );
     });
   }
 
@@ -502,7 +473,6 @@ public class MainController {
       }
     });
   }
-
   @RequiredArgsConstructor
   static class GlobalShortcutKeyListener implements HotkeyListener {
 
