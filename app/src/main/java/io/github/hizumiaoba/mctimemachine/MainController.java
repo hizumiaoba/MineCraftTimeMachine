@@ -180,10 +180,8 @@ public class MainController {
     enableAutoBackupOnQuittingGamesChkbox.setSelected(
       Boolean.parseBoolean(mainConfig.load("backup_on_quitting_minecraft")));
     
-    // BackupServiceのインスタンス化
     backupService = new BackupService(backupSavingFolderPathField.getText(), savesFolderPathField.getText());
     
-    // シャットダウンフックにBackupServiceのシャットダウン処理を追加
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       if (backupService != null) {
         backupService.shutdown();
@@ -447,7 +445,7 @@ public class MainController {
 
   @FXML
   void onOpenReleasePageOnWebBtnClick() throws IOException {
-    log.trace("Opening the backup list.");
+    log.trace("Opening dialog to show the update modal.");
     // open new dialog with `manager.fxml`
     FXMLLoader loader = new FXMLLoader(
       MineCraftTimeMachineApplication.class.getResource("updateModal.fxml"));
