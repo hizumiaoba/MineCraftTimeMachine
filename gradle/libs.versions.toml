@@ -1,6 +1,6 @@
 [versions]
 junit = "5.12.2"
-lombok = "1.18.36"
+lombok = "1.18.38"
 jakarta = "3.0.0"
 jackson = "2.18.3"
 
