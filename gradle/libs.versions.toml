@@ -6,7 +6,7 @@ jackson = "2.18.3"
 
 [libraries]
 logback = { group = "ch.qos.logback", name = "logback-classic", version = "1.5.18" }
-guava = { group = "com.google.guava", name = "guava", version = "33.4.0-jre" }
+guava = { group = "com.google.guava", name = "guava", version = "33.4.8-jre" }
 sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version = "3.49.1.0" }
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
 jakarta-annotation = { group = "jakarta.annotation", name = "jakarta.annotation-api", version.ref = "jakarta" }
