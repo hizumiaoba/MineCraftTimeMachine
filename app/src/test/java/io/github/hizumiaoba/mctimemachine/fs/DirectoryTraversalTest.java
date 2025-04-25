@@ -74,7 +74,7 @@ public class DirectoryTraversalTest {
   }
 
   @Test
-  void scanDirectory_validDirectory_shouldFireFileCountCompleteEvent() {
+  void scanDirectoryValidDirectoryShouldFireFileCountCompleteEvent() {
     String directoryPath = tempDir.toString();
     directoryScanner.scanDirectory(directoryPath);
     try {
@@ -87,32 +87,32 @@ public class DirectoryTraversalTest {
   }
 
   @Test
-  void scanDirectory_emptyPath_shouldThrowIllegalArgumentException() {
+  void scanDirectoryEmptyPathShouldThrowIllegalArgumentException() {
     IllegalArgumentException expected = assertThrows(IllegalArgumentException.class, () -> directoryScanner.scanDirectory(""));
     assertThat(expected).hasMessageThat().contains("Path cannot be null or empty");
   }
 
   @Test
-  void scanDirectory_nullPath_shouldThrowIllegalArgumentException() {
+  void scanDirectoryNullPathShouldThrowIllegalArgumentException() {
     IllegalArgumentException expected = assertThrows(IllegalArgumentException.class, () -> directoryScanner.scanDirectory(null));
     assertThat(expected).hasMessageThat().contains("Path cannot be null or empty");
   }
 
   @Test
-  void scanDirectory_nonExistentPath_shouldThrowIllegalArgumentException() {
+  void scanDirectoryNonExistentPathShouldThrowIllegalArgumentException() {
     Path nonExistentPath = tempDir.resolve("nonExistent");
     IllegalArgumentException expected = assertThrows(IllegalArgumentException.class, () -> directoryScanner.scanDirectory(nonExistentPath.toString()));
     assertThat(expected).hasMessageThat().contains("The path %s does not exist".formatted(nonExistentPath.toString()));
   }
 
   @Test
-  void getBackups_noTraversalCompleted_shouldThrowIllegalStateException() {
+  void getBackupsNoTraversalCompletedShouldThrowIllegalStateException() {
     IllegalStateException expected = assertThrows(IllegalStateException.class, () -> directoryScanner.getBackups());
     assertThat(expected).hasMessageThat().contains("No traversal have been completed before retrieving backup data.");
   }
 
   @Test
-  void scanDirectory_withSubdirectories_shouldAddBackupDirAttributesToList() throws IOException {
+  void scanDirectoryWithSubdirectoriesShouldAddBackupDirAttributesToList() throws IOException {
     Path subDir1 = tempDir.resolve("subDir1");
     Path subDir2 = tempDir.resolve("subDir2");
     Files.createDirectory(subDir1);
@@ -131,7 +131,7 @@ public class DirectoryTraversalTest {
   }
 
   @Test
-  void scanDirectory_withFilesAndSubdirectories_shouldOnlyProcessDirectories() throws IOException {
+  void scanDirectoryWithFilesAndSubdirectoriesShouldOnlyProcessDirectories() throws IOException {
     Path subDir1 = tempDir.resolve("subDir1");
     Path file1 = tempDir.resolve("file1.txt");
     Files.createDirectory(subDir1);
@@ -150,7 +150,7 @@ public class DirectoryTraversalTest {
   }
 
   @Test
-  void scanDirectory_withSpecialDirectories_shouldSetIsSpecialCorrectly()
+  void scanDirectoryWithSpecialDirectoriesShouldSetIsSpecialCorrectly()
     throws IOException, InterruptedException {
     Path specialDir = tempDir.resolve("Sp_special");
     Path normalDir = tempDir.resolve("normal");
@@ -179,7 +179,7 @@ public class DirectoryTraversalTest {
   }
 
 @Test
-void scanDirectory_progressUpdateListener_shouldReceiveProgressUpdates()
+void scanDirectoryProgressUpdateListenerShouldReceiveProgressUpdates()
   throws IOException, InterruptedException {
   Path subDir1 = tempDir.resolve("subDir1");
   Path subDir2 = tempDir.resolve("subDir2");
@@ -213,7 +213,7 @@ void scanDirectory_progressUpdateListener_shouldReceiveProgressUpdates()
 }
 
   @Test
-  void scanDirectory_withSubdirectories_backupDirAttributesShouldHaveCorrectValues() throws IOException {
+  void scanDirectoryWithSubdirectoriesBackupDirAttributesShouldHaveCorrectValues() throws IOException {
     Path subDir1 = tempDir.resolve("subDir1");
     Files.createDirectory(subDir1);
     File subDirFile = subDir1.toFile();
