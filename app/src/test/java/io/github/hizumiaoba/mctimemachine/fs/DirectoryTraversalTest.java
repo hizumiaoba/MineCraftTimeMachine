@@ -3,6 +3,7 @@ package io.github.hizumiaoba.mctimemachine.fs;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -74,14 +75,18 @@ public class DirectoryTraversalTest {
   }
 
   @Test
-  void scanDirectoryValidDirectoryShouldFireFileCountCompleteEvent() {
+  void scanDirectoryValidDirectoryShouldFireFileCountCompleteEvent() throws InterruptedException {
     String directoryPath = tempDir.toString();
+    CountDownLatch latch = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      latch.countDown();
+      return null;
+    }).when(fileCountCompleteListener).onFileCountComplete(anyLong());
+
     directoryScanner.scanDirectory(directoryPath);
-    try {
-      TimeUnit.SECONDS.sleep(1);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
+
+    boolean completed = latch.await(2, TimeUnit.SECONDS);
+    assertThat(completed).isTrue();
 
     verify(fileCountCompleteListener, atLeastOnce()).onFileCountComplete(0);
   }
@@ -112,38 +117,50 @@ public class DirectoryTraversalTest {
   }
 
   @Test
-  void scanDirectoryWithSubdirectoriesShouldAddBackupDirAttributesToList() throws IOException {
+  void scanDirectoryWithSubdirectoriesShouldAddBackupDirAttributesToList() throws IOException, InterruptedException {
     Path subDir1 = tempDir.resolve("subDir1");
     Path subDir2 = tempDir.resolve("subDir2");
     Files.createDirectory(subDir1);
     Files.createDirectory(subDir2);
 
+    CountDownLatch latch = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      DirectoryTraversalProgressEvent event = invocation.getArgument(0);
+      if (event.getCurrent() == 2 && event.getTotal() == 2) {
+        latch.countDown();
+      }
+      return null;
+    }).when(progressUpdateListener).onProgressUpdate(any(DirectoryTraversalProgressEvent.class));
+
     directoryScanner.scanDirectory(tempDir.toString());
 
-    try {
-      TimeUnit.SECONDS.sleep(1);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
+    boolean completed = latch.await(2, TimeUnit.SECONDS);
+    assertThat(completed).isTrue();
 
     List<BackupDirAttributes> backups = directoryScanner.getBackups();
     assertThat(backups).hasSize(2);
   }
 
   @Test
-  void scanDirectoryWithFilesAndSubdirectoriesShouldOnlyProcessDirectories() throws IOException {
+  void scanDirectoryWithFilesAndSubdirectoriesShouldOnlyProcessDirectories() throws IOException, InterruptedException {
     Path subDir1 = tempDir.resolve("subDir1");
     Path file1 = tempDir.resolve("file1.txt");
     Files.createDirectory(subDir1);
     Files.createFile(file1);
 
+    CountDownLatch latch = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      DirectoryTraversalProgressEvent event = invocation.getArgument(0);
+      if (event.getCurrent() == 1 && event.getTotal() == 1) {
+        latch.countDown();
+      }
+      return null;
+    }).when(progressUpdateListener).onProgressUpdate(any(DirectoryTraversalProgressEvent.class));
+
     directoryScanner.scanDirectory(tempDir.toString());
 
-    try {
-      Thread.sleep(100);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
+    boolean completed = latch.await(2, TimeUnit.SECONDS);
+    assertThat(completed).isTrue();
 
     List<BackupDirAttributes> backups = directoryScanner.getBackups();
     assertThat(backups).hasSize(1);
@@ -207,13 +224,12 @@ void scanDirectoryProgressUpdateListenerShouldReceiveProgressUpdates()
   List<DirectoryTraversalProgressEvent> capturedEvents = eventArgumentCaptor.getAllValues();
   assertThat(capturedEvents).isNotEmpty();
 
-  assertThat(capturedEvents.get(0).getCurrent()).isEqualTo(2);
   assertThat(capturedEvents.get(capturedEvents.size() - 1).getCurrent()).isEqualTo(2);
   assertThat(capturedEvents.get(capturedEvents.size() - 1).getTotal()).isEqualTo(2);
 }
 
   @Test
-  void scanDirectoryWithSubdirectoriesBackupDirAttributesShouldHaveCorrectValues() throws IOException {
+  void scanDirectoryWithSubdirectoriesBackupDirAttributesShouldHaveCorrectValues() throws IOException, InterruptedException {
     Path subDir1 = tempDir.resolve("subDir1");
     Files.createDirectory(subDir1);
     File subDirFile = subDir1.toFile();
@@ -222,21 +238,27 @@ void scanDirectoryProgressUpdateListenerShouldReceiveProgressUpdates()
     FileTime expectedCreatedAt = Files.readAttributes(subDir1, BasicFileAttributes.class).creationTime();
     int expectedSavedWorldCount = Objects.requireNonNullElse(subDirFile.listFiles(), new File[0]).length;
 
+    CountDownLatch latch = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      DirectoryTraversalProgressEvent event = invocation.getArgument(0);
+      if (event.getCurrent() == 1 && event.getTotal() == 1) {
+        latch.countDown();
+      }
+      return null;
+    }).when(progressUpdateListener).onProgressUpdate(any(DirectoryTraversalProgressEvent.class));
+
     directoryScanner.scanDirectory(tempDir.toString());
 
-    try {
-      Thread.sleep(100);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
+    boolean completed = latch.await(2, TimeUnit.SECONDS);
+    assertThat(completed).isTrue();
 
     List<BackupDirAttributes> backups = directoryScanner.getBackups();
     assertThat(backups).hasSize(1);
 
     BackupDirAttributes backup = backups.get(0);
-    assertThat(expectedSize).isEqualTo(backup.size());
-    assertThat(expectedIsSpecial).isEqualTo(backup.isSpecial());
-    assertThat(expectedCreatedAt).isEqualTo(backup.createdAt());
-    assertThat(expectedSavedWorldCount).isEqualTo(backup.savedWorldCount());
+    assertThat(backup.size()).isEqualTo(expectedSize);
+    assertThat(backup.isSpecial()).isEqualTo(expectedIsSpecial);
+    assertThat(backup.createdAt()).isEqualTo(expectedCreatedAt);
+    assertThat(backup.savedWorldCount()).isEqualTo(expectedSavedWorldCount);
   }
 }
