@@ -2,7 +2,9 @@ package io.github.hizumiaoba.mctimemachine.fs;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -19,15 +21,18 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 
+@Slf4j
 public class DirectoryTraversalTest {
 
   @TempDir Path tempDir;
@@ -52,8 +57,20 @@ public class DirectoryTraversalTest {
   void tearDown() throws InterruptedException {
     traversalTaskPool.shutdown();
     internalEventTaskPool.shutdown();
-    traversalTaskPool.awaitTermination(1, TimeUnit.SECONDS);
-    internalEventTaskPool.awaitTermination(1, TimeUnit.SECONDS);
+    final boolean traversalTaskPoolTermination = traversalTaskPool.awaitTermination(1,
+      TimeUnit.SECONDS);
+    final boolean internalEventTaskPoolTermination = internalEventTaskPool.awaitTermination(1,
+      TimeUnit.SECONDS);
+    if (!traversalTaskPoolTermination) {
+      log.warn("Traversal task pool did not terminate as expected.");
+      log.warn("Commencing to shutdown the pool forcibly.");
+      traversalTaskPool.shutdownNow();
+    }
+    if (!internalEventTaskPoolTermination) {
+      log.warn("Internal event task pool did not terminate as expected.");
+      log.warn("Commencing to shutdown the pool forcibly.");
+      internalEventTaskPool.shutdownNow();
+    }
   }
 
   @Test
@@ -133,66 +150,67 @@ public class DirectoryTraversalTest {
   }
 
   @Test
-  void scanDirectory_withSpecialDirectories_shouldSetIsSpecialCorrectly() throws IOException {
+  void scanDirectory_withSpecialDirectories_shouldSetIsSpecialCorrectly()
+    throws IOException, InterruptedException {
     Path specialDir = tempDir.resolve("Sp_special");
     Path normalDir = tempDir.resolve("normal");
     Files.createDirectory(specialDir);
     Files.createDirectory(normalDir);
 
+    CountDownLatch latch = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      DirectoryTraversalProgressEvent event = invocation.getArgument(0);
+      if (event.getCurrent() == 2 && event.getTotal() == 2) {
+        latch.countDown();
+      }
+      return null;
+    }).when(progressUpdateListener).onProgressUpdate(any(DirectoryTraversalProgressEvent.class));
+
     directoryScanner.scanDirectory(tempDir.toString());
 
-    try {
-      Thread.sleep(100);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
+    boolean completed = latch.await(2, TimeUnit.SECONDS);
+    assertThat(completed).isTrue();
 
     List<BackupDirAttributes> backups = directoryScanner.getBackups();
     assertThat(backups).hasSize(2);
 
-    boolean specialFound = false;
-    boolean normalFound = false;
-
-    for (BackupDirAttributes backup : backups) {
-      if (backup.isSpecial()) {
-        specialFound = true;
-      } else {
-        normalFound = true;
-      }
-    }
-
-    assertThat(specialFound).isTrue();
-    assertThat(normalFound).isTrue();
+    assertThat(backups.stream().anyMatch(BackupDirAttributes::isSpecial)).isTrue();
+    assertThat(backups.stream().anyMatch(backup -> !backup.isSpecial())).isTrue();
   }
 
 @Test
-    void scanDirectory_progressUpdateListener_shouldReceiveProgressUpdates() throws IOException {
-        Path subDir1 = tempDir.resolve("subDir1");
-        Path subDir2 = tempDir.resolve("subDir2");
-        Files.createDirectory(subDir1);
-        Files.createDirectory(subDir2);
+void scanDirectory_progressUpdateListener_shouldReceiveProgressUpdates()
+  throws IOException, InterruptedException {
+  Path subDir1 = tempDir.resolve("subDir1");
+  Path subDir2 = tempDir.resolve("subDir2");
+  Files.createDirectory(subDir1);
+  Files.createDirectory(subDir2);
 
-        directoryScanner.scanDirectory(tempDir.toString());
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        ArgumentCaptor<DirectoryTraversalProgressEvent> eventArgumentCaptor = ArgumentCaptor.forClass(DirectoryTraversalProgressEvent.class);
-
-        verify(progressUpdateListener, atLeastOnce()).onProgressUpdate(eventArgumentCaptor.capture());
-
-        List<DirectoryTraversalProgressEvent> capturedEvents = eventArgumentCaptor.getAllValues();
-
-        assertThat(capturedEvents).isNotEmpty();
-
-        DirectoryTraversalProgressEvent lastEvent = capturedEvents.get(capturedEvents.size() - 1);
-        assertThat(lastEvent.getTotal()).isEqualTo(2);
-        boolean progressReachedEnd = capturedEvents.stream().anyMatch(event -> event.getCurrent() == 2 && event.getTotal() == 2);
-        assertThat(progressReachedEnd).isTrue();
+  CountDownLatch latch = new CountDownLatch(1);
+  doAnswer(invocation -> {
+    DirectoryTraversalProgressEvent event = invocation.getArgument(0);
+    if (event.getCurrent() == 2 && event.getTotal() == 2) {
+      latch.countDown();
     }
+    return null;
+  }).when(progressUpdateListener).onProgressUpdate(any(DirectoryTraversalProgressEvent.class));
+
+  directoryScanner.scanDirectory(tempDir.toString());
+
+  boolean completed = latch.await(2, TimeUnit.SECONDS);
+  assertThat(completed).isTrue();
+
+  ArgumentCaptor<DirectoryTraversalProgressEvent> eventArgumentCaptor = ArgumentCaptor.forClass(
+    DirectoryTraversalProgressEvent.class);
+  verify(progressUpdateListener, atLeastOnce()).onProgressUpdate(eventArgumentCaptor.capture());
+
+  List<DirectoryTraversalProgressEvent> capturedEvents = eventArgumentCaptor.getAllValues();
+  assertThat(capturedEvents).isNotEmpty();
+
+  assertThat(capturedEvents.get(0).getCurrent()).isEqualTo(2);
+  assertThat(capturedEvents.get(capturedEvents.size() - 1).getCurrent()).isEqualTo(2);
+  assertThat(capturedEvents.get(capturedEvents.size() - 1).getTotal()).isEqualTo(2);
+}
 
   @Test
   void scanDirectory_withSubdirectories_backupDirAttributesShouldHaveCorrectValues() throws IOException {
