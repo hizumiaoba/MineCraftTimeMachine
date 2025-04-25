@@ -1,0 +1,224 @@
+package io.github.hizumiaoba.mctimemachine.fs;
+
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
+import io.github.hizumiaoba.mctimemachine.api.BackupDirAttributes;
+import io.github.hizumiaoba.mctimemachine.api.fs.DirectoryScanner;
+import io.github.hizumiaoba.mctimemachine.api.fs.DirectoryTraversalProgressEvent;
+import io.github.hizumiaoba.mctimemachine.api.fs.DirectoryTraversalProgressUpdateListener;
+import io.github.hizumiaoba.mctimemachine.api.fs.fileCountCompleteListener;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
+
+public class DirectoryTraversalTest {
+
+  @TempDir Path tempDir;
+  private ExecutorService traversalTaskPool;
+  private ExecutorService internalEventTaskPool;
+  private DirectoryScanner directoryScanner;
+  private DirectoryTraversalProgressUpdateListener progressUpdateListener;
+  private fileCountCompleteListener fileCountCompleteListener;
+
+  @BeforeEach
+  void setUp() {
+    traversalTaskPool = Executors.newWorkStealingPool(8);
+    internalEventTaskPool = Executors.newWorkStealingPool(8);
+    progressUpdateListener = mock(DirectoryTraversalProgressUpdateListener.class);
+    fileCountCompleteListener = mock(fileCountCompleteListener.class);
+    directoryScanner = new DirectoryScanner(traversalTaskPool, internalEventTaskPool);
+    directoryScanner.addProgressUpdateListener(progressUpdateListener);
+    directoryScanner.addTraversalCompleteListener(fileCountCompleteListener);
+  }
+
+  @AfterEach
+  void tearDown() throws InterruptedException {
+    traversalTaskPool.shutdown();
+    internalEventTaskPool.shutdown();
+    traversalTaskPool.awaitTermination(1, TimeUnit.SECONDS);
+    internalEventTaskPool.awaitTermination(1, TimeUnit.SECONDS);
+  }
+
+  @Test
+  void scanDirectory_validDirectory_shouldFireFileCountCompleteEvent() {
+    String directoryPath = tempDir.toString();
+    directoryScanner.scanDirectory(directoryPath);
+    try {
+      TimeUnit.SECONDS.sleep(1);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+
+    verify(fileCountCompleteListener, atLeastOnce()).onFileCountComplete(0);
+  }
+
+  @Test
+  void scanDirectory_emptyPath_shouldThrowIllegalArgumentException() {
+    IllegalArgumentException expected = assertThrows(IllegalArgumentException.class, () -> directoryScanner.scanDirectory(""));
+    assertThat(expected).hasMessageThat().contains("Path cannot be null or empty");
+  }
+
+  @Test
+  void scanDirectory_nullPath_shouldThrowIllegalArgumentException() {
+    IllegalArgumentException expected = assertThrows(IllegalArgumentException.class, () -> directoryScanner.scanDirectory(null));
+    assertThat(expected).hasMessageThat().contains("Path cannot be null or empty");
+  }
+
+  @Test
+  void scanDirectory_nonExistentPath_shouldThrowIllegalArgumentException() {
+    Path nonExistentPath = tempDir.resolve("nonExistent");
+    IllegalArgumentException expected = assertThrows(IllegalArgumentException.class, () -> directoryScanner.scanDirectory(nonExistentPath.toString()));
+    assertThat(expected).hasMessageThat().contains("The path %s does not exist".formatted(nonExistentPath.toString()));
+  }
+
+  @Test
+  void getBackups_noTraversalCompleted_shouldThrowIllegalStateException() {
+    IllegalStateException expected = assertThrows(IllegalStateException.class, () -> directoryScanner.getBackups());
+    assertThat(expected).hasMessageThat().contains("No traversal have been completed before retrieving backup data.");
+  }
+
+  @Test
+  void scanDirectory_withSubdirectories_shouldAddBackupDirAttributesToList() throws IOException {
+    Path subDir1 = tempDir.resolve("subDir1");
+    Path subDir2 = tempDir.resolve("subDir2");
+    Files.createDirectory(subDir1);
+    Files.createDirectory(subDir2);
+
+    directoryScanner.scanDirectory(tempDir.toString());
+
+    try {
+      TimeUnit.SECONDS.sleep(1);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+
+    List<BackupDirAttributes> backups = directoryScanner.getBackups();
+    assertThat(backups).hasSize(2);
+  }
+
+  @Test
+  void scanDirectory_withFilesAndSubdirectories_shouldOnlyProcessDirectories() throws IOException {
+    Path subDir1 = tempDir.resolve("subDir1");
+    Path file1 = tempDir.resolve("file1.txt");
+    Files.createDirectory(subDir1);
+    Files.createFile(file1);
+
+    directoryScanner.scanDirectory(tempDir.toString());
+
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+
+    List<BackupDirAttributes> backups = directoryScanner.getBackups();
+    assertThat(backups).hasSize(1);
+  }
+
+  @Test
+  void scanDirectory_withSpecialDirectories_shouldSetIsSpecialCorrectly() throws IOException {
+    Path specialDir = tempDir.resolve("Sp_special");
+    Path normalDir = tempDir.resolve("normal");
+    Files.createDirectory(specialDir);
+    Files.createDirectory(normalDir);
+
+    directoryScanner.scanDirectory(tempDir.toString());
+
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+
+    List<BackupDirAttributes> backups = directoryScanner.getBackups();
+    assertThat(backups).hasSize(2);
+
+    boolean specialFound = false;
+    boolean normalFound = false;
+
+    for (BackupDirAttributes backup : backups) {
+      if (backup.isSpecial()) {
+        specialFound = true;
+      } else {
+        normalFound = true;
+      }
+    }
+
+    assertThat(specialFound).isTrue();
+    assertThat(normalFound).isTrue();
+  }
+
+@Test
+    void scanDirectory_progressUpdateListener_shouldReceiveProgressUpdates() throws IOException {
+        Path subDir1 = tempDir.resolve("subDir1");
+        Path subDir2 = tempDir.resolve("subDir2");
+        Files.createDirectory(subDir1);
+        Files.createDirectory(subDir2);
+
+        directoryScanner.scanDirectory(tempDir.toString());
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        ArgumentCaptor<DirectoryTraversalProgressEvent> eventArgumentCaptor = ArgumentCaptor.forClass(DirectoryTraversalProgressEvent.class);
+
+        verify(progressUpdateListener, atLeastOnce()).onProgressUpdate(eventArgumentCaptor.capture());
+
+        List<DirectoryTraversalProgressEvent> capturedEvents = eventArgumentCaptor.getAllValues();
+
+        assertThat(capturedEvents).isNotEmpty();
+
+        DirectoryTraversalProgressEvent lastEvent = capturedEvents.get(capturedEvents.size() - 1);
+        assertThat(lastEvent.getTotal()).isEqualTo(2);
+        boolean progressReachedEnd = capturedEvents.stream().anyMatch(event -> event.getCurrent() == 2 && event.getTotal() == 2);
+        assertThat(progressReachedEnd).isTrue();
+    }
+
+  @Test
+  void scanDirectory_withSubdirectories_backupDirAttributesShouldHaveCorrectValues() throws IOException {
+    Path subDir1 = tempDir.resolve("subDir1");
+    Files.createDirectory(subDir1);
+    File subDirFile = subDir1.toFile();
+    long expectedSize = subDirFile.length();
+    boolean expectedIsSpecial = subDirFile.getName().startsWith("Sp_");
+    FileTime expectedCreatedAt = Files.readAttributes(subDir1, BasicFileAttributes.class).creationTime();
+    int expectedSavedWorldCount = Objects.requireNonNullElse(subDirFile.listFiles(), new File[0]).length;
+
+    directoryScanner.scanDirectory(tempDir.toString());
+
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+
+    List<BackupDirAttributes> backups = directoryScanner.getBackups();
+    assertThat(backups).hasSize(1);
+
+    BackupDirAttributes backup = backups.get(0);
+    assertThat(expectedSize).isEqualTo(backup.size());
+    assertThat(expectedIsSpecial).isEqualTo(backup.isSpecial());
+    assertThat(expectedCreatedAt).isEqualTo(backup.createdAt());
+    assertThat(expectedSavedWorldCount).isEqualTo(backup.savedWorldCount());
+  }
+}
