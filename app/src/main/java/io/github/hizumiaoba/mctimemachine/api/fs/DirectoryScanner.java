@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DirectoryScanner {
   private final List<DirectoryTraversalProgressUpdateListener> progressUpdateListeners;
-  private final List<fileCountCompleteListener> fileCountCompleteListeners;
+  private final List<FileCountCompleteListener> FileCountCompleteListeners;
   private final ExecutorService traversalTaskPool;
   private final ExecutorService internalEventTaskPool;
   private long totalFiles;
@@ -44,12 +44,12 @@ public class DirectoryScanner {
     ExecutorService traversalTaskPool,
     ExecutorService internalEventTaskPool,
     List<DirectoryTraversalProgressUpdateListener> progressUpdateListeners,
-    List<fileCountCompleteListener> fileCountCompleteListeners
+    List<FileCountCompleteListener> FileCountCompleteListeners
   ) {
     this.traversalTaskPool = traversalTaskPool;
     this.internalEventTaskPool = internalEventTaskPool;
     this.progressUpdateListeners = progressUpdateListeners;
-    this.fileCountCompleteListeners = fileCountCompleteListeners;
+    this.FileCountCompleteListeners = FileCountCompleteListeners;
     this.backups = Collections.synchronizedList(new ArrayList<>());
   }
 
@@ -57,8 +57,8 @@ public class DirectoryScanner {
     this.progressUpdateListeners.add(listener);
   }
 
-  public void addTraversalCompleteListener(fileCountCompleteListener listener) {
-    this.fileCountCompleteListeners.add(listener);
+  public void addTraversalCompleteListener(FileCountCompleteListener listener) {
+    this.FileCountCompleteListeners.add(listener);
   }
 
   public List<BackupDirAttributes> getBackups() {
@@ -88,7 +88,7 @@ public class DirectoryScanner {
       log.info("firing counting complete event");
       final long startTime = System.currentTimeMillis();
       final List<CompletableFuture<Void>> futures = Collections.synchronizedList(new ArrayList<>());
-      for (fileCountCompleteListener listener : fileCountCompleteListeners) {
+      for (FileCountCompleteListener listener : FileCountCompleteListeners) {
         CompletableFuture<Void> future = CompletableFuture.runAsync(() -> listener.onFileCountComplete(totalFiles), internalEventTaskPool);
         futures.add(future);
       }

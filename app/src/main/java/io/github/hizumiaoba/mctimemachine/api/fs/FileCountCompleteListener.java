@@ -1,5 +1,5 @@
 package io.github.hizumiaoba.mctimemachine.api.fs;
 
-public interface fileCountCompleteListener {
+public interface FileCountCompleteListener {
   void onFileCountComplete(long totalFiles);
 }

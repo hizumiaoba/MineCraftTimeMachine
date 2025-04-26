@@ -13,7 +13,7 @@ import io.github.hizumiaoba.mctimemachine.api.BackupDirAttributes;
 import io.github.hizumiaoba.mctimemachine.api.fs.DirectoryScanner;
 import io.github.hizumiaoba.mctimemachine.api.fs.DirectoryTraversalProgressEvent;
 import io.github.hizumiaoba.mctimemachine.api.fs.DirectoryTraversalProgressUpdateListener;
-import io.github.hizumiaoba.mctimemachine.api.fs.fileCountCompleteListener;
+import io.github.hizumiaoba.mctimemachine.api.fs.FileCountCompleteListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -41,14 +41,14 @@ public class DirectoryTraversalTest {
   private ExecutorService internalEventTaskPool;
   private DirectoryScanner directoryScanner;
   private DirectoryTraversalProgressUpdateListener progressUpdateListener;
-  private fileCountCompleteListener fileCountCompleteListener;
+  private FileCountCompleteListener fileCountCompleteListener;
 
   @BeforeEach
   void setUp() {
     traversalTaskPool = Executors.newWorkStealingPool(8);
     internalEventTaskPool = Executors.newWorkStealingPool(8);
     progressUpdateListener = mock(DirectoryTraversalProgressUpdateListener.class);
-    fileCountCompleteListener = mock(fileCountCompleteListener.class);
+    fileCountCompleteListener = mock(FileCountCompleteListener.class);
     directoryScanner = new DirectoryScanner(traversalTaskPool, internalEventTaskPool);
     directoryScanner.addProgressUpdateListener(progressUpdateListener);
     directoryScanner.addTraversalCompleteListener(fileCountCompleteListener);
