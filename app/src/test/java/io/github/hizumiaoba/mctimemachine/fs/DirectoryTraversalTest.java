@@ -126,7 +126,7 @@ public class DirectoryTraversalTest {
     CountDownLatch latch = new CountDownLatch(1);
     doAnswer(invocation -> {
       DirectoryTraversalProgressEvent event = invocation.getArgument(0);
-      if (event.getCurrent() == 2 && event.getTotal() == 2) {
+      if (event.current() == 2 && event.total() == 2) {
         latch.countDown();
       }
       return null;
@@ -151,7 +151,7 @@ public class DirectoryTraversalTest {
     CountDownLatch latch = new CountDownLatch(1);
     doAnswer(invocation -> {
       DirectoryTraversalProgressEvent event = invocation.getArgument(0);
-      if (event.getCurrent() == 1 && event.getTotal() == 1) {
+      if (event.current() == 1 && event.total() == 1) {
         latch.countDown();
       }
       return null;
@@ -177,7 +177,7 @@ public class DirectoryTraversalTest {
     CountDownLatch latch = new CountDownLatch(1);
     doAnswer(invocation -> {
       DirectoryTraversalProgressEvent event = invocation.getArgument(0);
-      if (event.getCurrent() == 2 && event.getTotal() == 2) {
+      if (event.current() == 2 && event.total() == 2) {
         latch.countDown();
       }
       return null;
@@ -206,7 +206,7 @@ void scanDirectoryProgressUpdateListenerShouldReceiveProgressUpdates()
   CountDownLatch latch = new CountDownLatch(1);
   doAnswer(invocation -> {
     DirectoryTraversalProgressEvent event = invocation.getArgument(0);
-    if (event.getCurrent() == 2 && event.getTotal() == 2) {
+    if (event.current() == 2 && event.total() == 2) {
       latch.countDown();
     }
     return null;
@@ -224,8 +224,8 @@ void scanDirectoryProgressUpdateListenerShouldReceiveProgressUpdates()
   List<DirectoryTraversalProgressEvent> capturedEvents = eventArgumentCaptor.getAllValues();
   assertThat(capturedEvents).isNotEmpty();
 
-  assertThat(capturedEvents.get(capturedEvents.size() - 1).getCurrent()).isEqualTo(2);
-  assertThat(capturedEvents.get(capturedEvents.size() - 1).getTotal()).isEqualTo(2);
+  assertThat(capturedEvents.get(capturedEvents.size() - 1).current()).isEqualTo(2);
+  assertThat(capturedEvents.get(capturedEvents.size() - 1).total()).isEqualTo(2);
 }
 
   @Test
@@ -241,7 +241,7 @@ void scanDirectoryProgressUpdateListenerShouldReceiveProgressUpdates()
     CountDownLatch latch = new CountDownLatch(1);
     doAnswer(invocation -> {
       DirectoryTraversalProgressEvent event = invocation.getArgument(0);
-      if (event.getCurrent() == 1 && event.getTotal() == 1) {
+      if (event.current() == 1 && event.total() == 1) {
         latch.countDown();
       }
       return null;

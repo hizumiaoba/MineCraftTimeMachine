@@ -59,7 +59,7 @@ public class DirectoryScanningTest {
     CountDownLatch latch = new CountDownLatch(1);
     doAnswer(invocation -> {
       DirectoryTraversalProgressEvent event = invocation.getArgument(0);
-      if(event.getCurrent() == testWorlds.size() && event.getTotal() == testWorlds.size()) {
+      if(event.current() == testWorlds.size() && event.total() == testWorlds.size()) {
         latch.countDown();
       }
       return null;
