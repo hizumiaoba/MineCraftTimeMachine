@@ -26,17 +26,22 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 
 @Slf4j
 public class DirectoryTraversalTest {
 
   @TempDir Path tempDir;
+  @TempDir static Path staticTempDir;
   private ExecutorService traversalTaskPool;
   private ExecutorService internalEventTaskPool;
   private DirectoryScanner directoryScanner;
@@ -92,28 +97,25 @@ public class DirectoryTraversalTest {
   }
 
   @Test
-  void scanDirectoryEmptyPathShouldThrowIllegalArgumentException() {
-    IllegalArgumentException expected = assertThrows(IllegalArgumentException.class, () -> directoryScanner.scanDirectory(""));
-    assertThat(expected).hasMessageThat().contains("Path cannot be null or empty");
-  }
-
-  @Test
-  void scanDirectoryNullPathShouldThrowIllegalArgumentException() {
-    IllegalArgumentException expected = assertThrows(IllegalArgumentException.class, () -> directoryScanner.scanDirectory(null));
-    assertThat(expected).hasMessageThat().contains("Path cannot be null or empty");
-  }
-
-  @Test
-  void scanDirectoryNonExistentPathShouldThrowIllegalArgumentException() {
-    Path nonExistentPath = tempDir.resolve("nonExistent");
-    IllegalArgumentException expected = assertThrows(IllegalArgumentException.class, () -> directoryScanner.scanDirectory(nonExistentPath.toString()));
-    assertThat(expected).hasMessageThat().contains("The path %s does not exist".formatted(nonExistentPath.toString()));
-  }
-
-  @Test
   void getBackupsNoTraversalCompletedShouldThrowIllegalStateException() {
     IllegalStateException expected = assertThrows(IllegalStateException.class, () -> directoryScanner.getBackups());
     assertThat(expected).hasMessageThat().contains("No traversal have been completed before retrieving backup data.");
+  }
+
+  @ParameterizedTest
+  @MethodSource("invalidPathProvider")
+  void invalidPathScanningShouldThrowIllegalArgumentException(String invalidPath, String expectedMessage) {
+    IllegalArgumentException expected = assertThrows(IllegalArgumentException.class, () -> directoryScanner.scanDirectory(invalidPath));
+    assertThat(expected).hasMessageThat().contains(expectedMessage);
+  }
+
+  static Stream<Arguments> invalidPathProvider() {
+    final Path nonExistentPath = staticTempDir.resolve("nonExistent");
+    return Stream.of(
+      Arguments.of("", "Path cannot be null or empty"),
+      Arguments.of(null, "Path cannot be null or empty"),
+      Arguments.of(nonExistentPath.toString(), "The path %s does not exist".formatted(nonExistentPath.toString()))
+    );
   }
 
   @Test
