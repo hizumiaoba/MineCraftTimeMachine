@@ -2,11 +2,15 @@ package io.github.hizumiaoba.mctimemachine;
 
 import io.github.hizumiaoba.mctimemachine.api.BackupDirAttributes;
 import io.github.hizumiaoba.mctimemachine.api.ExceptionPopup;
+import io.github.hizumiaoba.mctimemachine.api.fs.DirectoryScanner;
 import io.github.hizumiaoba.mctimemachine.service.BackupService;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -19,7 +23,6 @@ import javafx.scene.control.TextField;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -44,14 +47,15 @@ public class BackupManagerController {
   @FXML
   private Label labelCountBackedupWorlds;
 
-  @Setter
-  private Map<String, BackupDirAttributes> attributes;
-  
+  private Map<String, BackupDirAttributes> attributesCache;
+
   private BackupService backupService;
+  private DirectoryScanner directoryScanner;
 
   @FXML
   void initialize() throws IOException {
     log.info("BackupManagerController initialized.");
+    this.attributesCache = new ConcurrentHashMap<>();
   }
   
   public void updateUI() throws IOException {
@@ -62,35 +66,61 @@ public class BackupManagerController {
       p.pop();
       return;
     }
-    
-    ObservableList<String> items = FXCollections.observableArrayList();
-    try {
-      items = FXCollections.observableList(
-        backupService.getBackupDirPaths().parallelStream()
-          .map(p -> p.getFileName().toString())
-          .toList());
-      this.backupFolderListView.getSelectionModel().selectFirst();
-      this.backupFolderListView.getSelectionModel().selectedItemProperty().addListener(
-        (observable, before, after) -> {
-          BackupDirAttributes attr = this.attributes.get(after);
-          if (attr == null) {
-            log.warn("No attributes found for {}", after);
-            return;
+    if (this.directoryScanner == null) {
+      this.directoryScanner = new DirectoryScanner();
+      this.directoryScanner.addProgressUpdateListener(
+        event -> log.trace("Progress update: {}/{}", event.current(), event.total()));
+      this.directoryScanner.addTraversalCompleteListener(
+        totalFiles -> {
+          log.info("Directory scan completed. Total files: {}", totalFiles);
+          // modal dialog configuration will be handled here due to concurrency of scanDirectory
+          ObservableList<String> items = FXCollections.observableArrayList();
+          try {
+            items = FXCollections.observableList(
+              backupService.getBackupDirPaths().parallelStream()
+                .map(p -> p.getFileName().toString())
+                .toList());
+            this.backupFolderListView.getSelectionModel().selectFirst();
+            this.backupFolderListView.getSelectionModel().selectedItemProperty().addListener(this::listViewSelectionChanged);
+          } catch (IOException e) {
+            log.error("Failed to get backup directory names", e);
+            ExceptionPopup p = new ExceptionPopup(e, "バックアップフォルダ名の取得に失敗しました",
+              "BackupManagerController#updateUI");
+            p.pop();
+          } finally {
+            this.backupFolderListView.setItems(items);
           }
-          this.textFieldBackupFolderName.setText(after);
-          this.labelBackupDateCreated.setText(attr.createdAt().toString());
-          this.labelBackupKind.setText(attr.isSpecial() ? "特別" : "通常");
-          this.labelBackupDataSize.setText(String.valueOf(attr.size()));
-          this.labelCountBackedupWorlds.setText(String.valueOf(attr.savedWorldCount()));
         });
-    } catch (IOException e) {
-      log.error("Failed to get backup directory names", e);
-      ExceptionPopup p = new ExceptionPopup(e, "バックアップフォルダ名の取得に失敗しました",
-        "BackupManagerController#updateUI");
-      p.pop();
-    } finally {
-      this.backupFolderListView.setItems(items);
+      this.directoryScanner.scanDirectory(this.backupService.getBackupPath().toString());
     }
+  }
+
+  private void listViewSelectionChanged(ObservableValue<? extends String> observable, String before, String after) {
+    BackupDirAttributes attr = this.attributesCache.computeIfAbsent(after, k ->
+      this.directoryScanner.getBackups()
+        .parallelStream()
+        .filter(attribute -> attribute.dirName().equals(k)).findFirst()
+        .orElseThrow(() -> {
+          log.warn("No attributes found for backup directory: {}", k);
+          return new IllegalStateException("No attributes found for backup directory: " + k);
+        }));
+    updateAttributeDetail(after, attr);
+  }
+
+  private void updateAttributeDetail(String after, BackupDirAttributes attr) {
+    this.textFieldBackupFolderName.setText(after);
+    this.labelBackupDateCreated.setText(attr.createdAt().toString());
+    this.labelBackupKind.setText(attr.isSpecial() ? "特別" : "通常");
+
+    String[] units = new String[] { "B", "KB", "MB", "GB", "TB" };
+    int unitIndex = (int) (Math.log10(attr.size()) / 3);
+    double unitValue = 1 << (unitIndex * 10);
+
+    String readableSize = new DecimalFormat("#,##0.###")
+      .format(attr.size() / unitValue) + " "
+      + units[unitIndex];
+    this.labelBackupDataSize.setText(readableSize);
+    this.labelCountBackedupWorlds.setText(String.valueOf(attr.savedWorldCount()));
   }
 
   private void updateListView() {
@@ -104,6 +134,7 @@ public class BackupManagerController {
       p.pop();
     } finally {
       this.backupFolderListView.setItems(newItems);
+      this.directoryScanner.scanDirectory(this.backupService.getBackupPath().toString());
     }
   }
 

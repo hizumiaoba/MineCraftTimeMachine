@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.StreamSupport;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -161,7 +162,7 @@ public class DirectoryScanner {
       for (File file : files) {
         if (file.isDirectory()) {
           final String dirName = file.getName();
-          final long size = file.length();
+          final long size = computeDirectorySize(file);
           final boolean isSpecial = file.getName().startsWith("Sp_");
           final int savedWorldCount = Objects.requireNonNullElse(file.listFiles(), new File[0]).length;
           final FileTime createdAt = Files.readAttributes(file.toPath(), BasicFileAttributes.class).creationTime();
@@ -179,5 +180,11 @@ public class DirectoryScanner {
         }
       }
     }
+  }
+
+  private long computeDirectorySize(File directory) throws IOException {
+    Iterable<File> files = com.google.common.io.Files.fileTraverser().breadthFirst(directory);
+    long size = StreamSupport.stream(files.spliterator(), false).mapToLong(File::length).sum();
+    return size;
   }
 }
