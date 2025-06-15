@@ -160,11 +160,13 @@ public class DirectoryScanner {
     if (files != null) {
       for (File file : files) {
         if (file.isDirectory()) {
+          final String dirName = file.getName();
           final long size = file.length();
           final boolean isSpecial = file.getName().startsWith("Sp_");
           final int savedWorldCount = Objects.requireNonNullElse(file.listFiles(), new File[0]).length;
           final FileTime createdAt = Files.readAttributes(file.toPath(), BasicFileAttributes.class).creationTime();
           BackupDirAttributes attributes = new BackupDirAttributes(
+            dirName,
             size,
             isSpecial,
             createdAt,

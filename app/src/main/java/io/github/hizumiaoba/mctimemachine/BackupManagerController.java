@@ -4,13 +4,9 @@ import io.github.hizumiaoba.mctimemachine.api.BackupDirAttributes;
 import io.github.hizumiaoba.mctimemachine.api.ExceptionPopup;
 import io.github.hizumiaoba.mctimemachine.service.BackupService;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -53,45 +49,6 @@ public class BackupManagerController {
   
   private BackupService backupService;
 
-  private Map<String, BackupDirAttributes> retrieveAttributes() throws IOException {
-    Map<String, BackupDirAttributes> attributes = new HashMap<>();
-    try (Stream<Path> s = backupService.getBackupDirPaths().stream()) {
-      s.forEach(p -> {
-        BackupDirAttributes attr;
-        try (Stream<Path> list = Files.list(p)) {
-          attr = new BackupDirAttributes(
-            calculateSizeRecursively(p),
-            p.getFileName().toString().startsWith("Sp_"),
-            Files.readAttributes(p, BasicFileAttributes.class).creationTime(),
-            (int) list.filter(Files::isDirectory).count()
-          );
-          attributes.put(p.getFileName().toString(), attr);
-        } catch (IOException e) {
-          log.warn("Failed to get attributes for {}", p.getFileName(), e);
-          log.warn("Skipping this directory");
-        }
-      });
-    }
-    return attributes;
-  }
-
-  private static long calculateSizeRecursively(Path p) {
-    long size = 0;
-    try (Stream<Path> s = Files.list(p)) {
-      size = s.map(path -> {
-        try {
-          return Files.isDirectory(path) ? calculateSizeRecursively(path) : Files.size(path);
-        } catch (IOException e) {
-          log.warn("Failed to get size of {}", path.getFileName(), e);
-        }
-        return 0L;
-      }).reduce(0L, Long::sum);
-    } catch (IOException e) {
-      log.warn("Failed to calculate size of {}", p.getFileName(), e);
-    }
-    return size;
-  }
-
   @FXML
   void initialize() throws IOException {
     log.info("BackupManagerController initialized.");
@@ -106,7 +63,6 @@ public class BackupManagerController {
       return;
     }
     
-    this.attributes = retrieveAttributes();
     ObservableList<String> items = FXCollections.observableArrayList();
     try {
       items = FXCollections.observableList(
