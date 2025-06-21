@@ -73,7 +73,7 @@ public class DirectoryScanner {
     internalEventTaskPool.submit(() -> {
       log.info("firing progress update event: {} / {}", current, total);
       final long startTime = System.currentTimeMillis();
-      CompletableFuture<DirectoryTraversalProgressEvent> eventCompletableFuture = CompletableFuture.supplyAsync(() -> new DirectoryTraversalProgressEvent(total, current), traversalTaskPool);
+      CompletableFuture<DirectoryTraversalProgressEvent> eventCompletableFuture = CompletableFuture.supplyAsync(() -> new DirectoryTraversalProgressEvent(current, total), traversalTaskPool);
       final List<CompletableFuture<Void>> futures = Collections.synchronizedList(new ArrayList<>());
       for (DirectoryTraversalProgressUpdateListener listener : progressUpdateListeners) {
         CompletableFuture<Void> future = eventCompletableFuture.thenAcceptAsync(
