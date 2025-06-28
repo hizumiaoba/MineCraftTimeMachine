@@ -39,6 +39,7 @@ public class DirectoryAttributeUtils {
     try (var stream = Files.list(backupPath)) {
       stream.parallel().forEach(p -> {
         try {
+          String dirName = p.getFileName().toString();
           long size = Files.size(p);
           boolean isSpecial = isSpecial(p);
           FileTime createdAt = getCreatedAtAsFileTime(p);
@@ -47,7 +48,7 @@ public class DirectoryAttributeUtils {
             savedWorldCount = (int) innerStream.count();
           }
           attributes.put(p.getFileName().toString(),
-            new BackupDirAttributes(size, isSpecial, createdAt, savedWorldCount));
+            new BackupDirAttributes(dirName, size, isSpecial, createdAt, savedWorldCount));
         } catch (IOException e) {
           log.warn("Failed to get the attributes of the directory: {}", p, e);
           attributes.put(p.getFileName().toString(), null);
