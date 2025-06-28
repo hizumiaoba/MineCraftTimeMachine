@@ -1,22 +1,22 @@
 [versions]
-junit = "5.12.2"
+junit = "5.13.1"
 lombok = "1.18.38"
 jakarta = "3.0.0"
-jackson = "2.19.0"
+jackson = "2.19.1"
 
 [libraries]
 logback = { group = "ch.qos.logback", name = "logback-classic", version = "1.5.18" }
 guava = { group = "com.google.guava", name = "guava", version = "33.4.8-jre" }
-sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version = "3.49.1.0" }
+sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version = "3.50.1.0" }
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
 jakarta-annotation = { group = "jakarta.annotation", name = "jakarta.annotation-api", version.ref = "jakarta" }
 jintelitype = { group = "com.melloware", name = "jintellitype", version = "1.5.6" }
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit" }
-jupiter-engine = { group = "org.junit.platform", name = "junit-platform-launcher", version = "1.12.2" }
+jupiter-engine = { group = "org.junit.platform", name = "junit-platform-launcher", version = "1.13.1" }
 truth = { group = "com.google.truth", name = "truth", version = "1.4.4" }
 mockito = { group = "org.mockito", name = "mockito-core", version = "5.18.0" }
 gh-api = { group = "org.kohsuke", name = "github-api", version = "1.326" }
-kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version = "2.1.21" }
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version = "2.2.0" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "4.12.0" }
 jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core", version.ref = "jackson" }
 jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "jackson" }
