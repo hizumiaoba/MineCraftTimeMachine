@@ -1,5 +1,5 @@
 [versions]
-junit = "5.13.3"
+junit = "6.0.0"
 lombok = "1.18.38"
 jakarta = "3.0.0"
 jackson = "2.19.1"
