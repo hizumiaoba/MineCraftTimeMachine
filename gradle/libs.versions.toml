@@ -17,7 +17,7 @@ truth = { group = "com.google.truth", name = "truth", version = "1.4.4" }
 mockito = { group = "org.mockito", name = "mockito-core", version = "5.18.0" }
 gh-api = { group = "org.kohsuke", name = "github-api", version = "1.326" }
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version = "2.2.0" }
-okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "4.12.0" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "5.2.1" }
 jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core", version.ref = "jackson" }
 jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "jackson" }
 jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations", version.ref = "jackson" }
