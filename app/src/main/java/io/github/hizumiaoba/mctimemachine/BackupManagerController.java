@@ -10,6 +10,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -91,7 +92,9 @@ public class BackupManagerController {
             this.backupFolderListView.setItems(items);
           }
         });
+      this.directoryScanner.addDirectoryProcessedListener(event -> Platform.runLater(() -> this.backupFolderListView.setDisable(false)));
       this.directoryScanner.scanDirectory(this.backupService.getBackupPath().toString());
+      this.backupFolderListView.setDisable(true);
     }
   }
 

@@ -29,6 +29,7 @@ public class DirectoryScanner {
   private long processedFiles;
   private File targetDirectory;
   private final List<BackupDirAttributes> backups;
+  private final List<DirectoryProcessedListener> directoryProcessedListeners;
 
   public DirectoryScanner() {
     this(
@@ -38,19 +39,21 @@ public class DirectoryScanner {
   }
 
   public DirectoryScanner(ExecutorService traversalTaskPool, ExecutorService internalEventTaskPool) {
-    this(traversalTaskPool, internalEventTaskPool, new ArrayList<>(), new ArrayList<>());
+    this(traversalTaskPool, internalEventTaskPool, new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
   }
 
   private DirectoryScanner(
     ExecutorService traversalTaskPool,
     ExecutorService internalEventTaskPool,
     List<DirectoryTraversalProgressUpdateListener> progressUpdateListeners,
-    List<FileCountCompleteListener> FileCountCompleteListeners
+    List<FileCountCompleteListener> FileCountCompleteListeners,
+    List<DirectoryProcessedListener> directoryProcessedListeners
   ) {
     this.traversalTaskPool = traversalTaskPool;
     this.internalEventTaskPool = internalEventTaskPool;
     this.progressUpdateListeners = progressUpdateListeners;
     this.FileCountCompleteListeners = FileCountCompleteListeners;
+    this.directoryProcessedListeners = directoryProcessedListeners;
     this.backups = Collections.synchronizedList(new ArrayList<>());
   }
 
@@ -60,6 +63,10 @@ public class DirectoryScanner {
 
   public void addTraversalCompleteListener(FileCountCompleteListener listener) {
     this.FileCountCompleteListeners.add(listener);
+  }
+
+  public void addDirectoryProcessedListener(DirectoryProcessedListener listener) {
+    this.directoryProcessedListeners.add(listener);
   }
 
   public List<BackupDirAttributes> getBackups() {
@@ -154,6 +161,22 @@ public class DirectoryScanner {
       log.error("Failed to process directory", e);
     }
     log.info("Scanning completed. Processed {} files.", processedFiles);
+    fireDirectoryProcessedEvent(processedFiles, targetDirectory);
+  }
+
+  private void fireDirectoryProcessedEvent(long processedFiles, File targetDirectory) {
+    internalEventTaskPool.submit(() -> {
+      log.info("firing whole directory processed event: {} files in {}", processedFiles, targetDirectory.getAbsolutePath());
+      final long startTime = System.currentTimeMillis();
+      CompletableFuture<DirectoryProcessedEvent> eventCompletableFuture = CompletableFuture.supplyAsync(() -> new DirectoryProcessedEvent(processedFiles, targetDirectory), traversalTaskPool);
+      final List<CompletableFuture<Void>> futures = Collections.synchronizedList(new ArrayList<>());
+      for (DirectoryProcessedListener listener : directoryProcessedListeners) {
+        CompletableFuture<Void> future = eventCompletableFuture.thenAcceptAsync(
+          listener::onProcessed, internalEventTaskPool);
+        futures.add(future);
+      }
+      joinTasks(futures, startTime);
+    });
   }
 
   private void processDirectoryRecursive(File directory) throws IOException {
