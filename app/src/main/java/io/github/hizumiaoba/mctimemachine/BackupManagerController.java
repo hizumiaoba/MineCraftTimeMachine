@@ -5,6 +5,7 @@ import io.github.hizumiaoba.mctimemachine.api.ExceptionPopup;
 import io.github.hizumiaoba.mctimemachine.api.fs.DirectoryScanner;
 import io.github.hizumiaoba.mctimemachine.service.BackupService;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.List;
@@ -79,6 +80,7 @@ public class BackupManagerController {
           try {
             items = FXCollections.observableList(
               backupService.getBackupDirPaths().parallelStream()
+                .filter(Files::isDirectory)
                 .map(p -> p.getFileName().toString())
                 .toList());
             this.backupFolderListView.getSelectionModel().selectFirst();
