@@ -2,14 +2,17 @@ package io.github.hizumiaoba.mctimemachine;
 
 import io.github.hizumiaoba.mctimemachine.api.BackupDirAttributes;
 import io.github.hizumiaoba.mctimemachine.api.ExceptionPopup;
+import io.github.hizumiaoba.mctimemachine.api.fs.DirectoryScanner;
+import io.github.hizumiaoba.mctimemachine.service.BackupService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashMap;
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
+import java.util.concurrent.ConcurrentHashMap;
+import javafx.application.Platform;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -22,7 +25,6 @@ import javafx.scene.control.TextField;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -47,86 +49,89 @@ public class BackupManagerController {
   @FXML
   private Label labelCountBackedupWorlds;
 
-  @Setter
-  private Map<String, BackupDirAttributes> attributes;
+  private Map<String, BackupDirAttributes> attributesCache;
 
-  private static Map<String, BackupDirAttributes> retrieveAttributes() throws IOException {
-    Map<String, BackupDirAttributes> attributes = new HashMap<>();
-    try (Stream<Path> s = MainController.backupUtils.getBackupDirPaths().stream()) {
-      s.forEach(p -> {
-        BackupDirAttributes attr;
-        try (Stream<Path> list = Files.list(p)) {
-          attr = new BackupDirAttributes(
-            calculateSizeRecursively(p),
-            p.getFileName().toString().startsWith("Sp_"),
-            Files.readAttributes(p, BasicFileAttributes.class).creationTime(),
-            (int) list.filter(Files::isDirectory).count()
-          );
-          attributes.put(p.getFileName().toString(), attr);
-        } catch (IOException e) {
-          log.warn("Failed to get attributes for {}", p.getFileName(), e);
-          log.warn("Skipping this directory");
-        }
-      });
-    }
-    return attributes;
-  }
-
-  private static long calculateSizeRecursively(Path p) {
-    long size = 0;
-    try (Stream<Path> s = Files.list(p)) {
-      size = s.map(path -> {
-        try {
-          return Files.isDirectory(path) ? calculateSizeRecursively(path) : Files.size(path);
-        } catch (IOException e) {
-          log.warn("Failed to get size of {}", path.getFileName(), e);
-        }
-        return 0L;
-      }).reduce(0L, Long::sum);
-    } catch (IOException e) {
-      log.warn("Failed to calculate size of {}", p.getFileName(), e);
-    }
-    return size;
-  }
+  private BackupService backupService;
+  private DirectoryScanner directoryScanner;
 
   @FXML
   void initialize() throws IOException {
     log.info("BackupManagerController initialized.");
-    this.attributes = retrieveAttributes();
-    ObservableList<String> items = FXCollections.observableArrayList();
-    try {
-      items = FXCollections.observableList(
-        MainController.backupUtils.getBackupDirPaths().parallelStream()
-          .map(p -> p.getFileName().toString())
-          .toList());
-      this.backupFolderListView.getSelectionModel().selectFirst();
-      this.backupFolderListView.getSelectionModel().selectedItemProperty().addListener(
-        (observable, before, after) -> {
-          BackupDirAttributes attr = this.attributes.get(after);
-          if (attr == null) {
-            log.warn("No attributes found for {}", after);
-            return;
-          }
-          this.textFieldBackupFolderName.setText(after);
-          this.labelBackupDateCreated.setText(attr.createdAt().toString());
-          this.labelBackupKind.setText(attr.isSpecial() ? "特別" : "通常");
-          this.labelBackupDataSize.setText(String.valueOf(attr.size()));
-          this.labelCountBackedupWorlds.setText(String.valueOf(attr.savedWorldCount()));
-        });
-    } catch (IOException e) {
-      log.error("Failed to get backup directory names", e);
-      ExceptionPopup p = new ExceptionPopup(e, "バックアップフォルダ名の取得に失敗しました",
-        "BackupManagerController#initialize");
+    this.attributesCache = new ConcurrentHashMap<>();
+  }
+  
+  public void updateUI() throws IOException {
+    if (backupService == null) {
+      log.error("BackupService has not been set");
+      ExceptionPopup p = new ExceptionPopup(new IllegalStateException("BackupService is null"), 
+        "バックアップサービスが設定されていません", "BackupManagerController#updateUI");
       p.pop();
-    } finally {
-      this.backupFolderListView.setItems(items);
+      return;
     }
+    if (this.directoryScanner == null) {
+      this.directoryScanner = new DirectoryScanner();
+      this.directoryScanner.addProgressUpdateListener(
+        event -> log.trace("Progress update: {}/{}", event.current(), event.total()));
+      this.directoryScanner.addTraversalCompleteListener(
+        totalFiles -> {
+          log.info("Directory scan completed. Total files: {}", totalFiles);
+          // modal dialog configuration will be handled here due to concurrency of scanDirectory
+          ObservableList<String> items = FXCollections.observableArrayList();
+          try {
+            items = FXCollections.observableList(
+              backupService.getBackupDirPaths().parallelStream()
+                .filter(Files::isDirectory)
+                .map(p -> p.getFileName().toString())
+                .toList());
+            this.backupFolderListView.getSelectionModel().selectFirst();
+            this.backupFolderListView.getSelectionModel().selectedItemProperty().addListener(this::listViewSelectionChanged);
+          } catch (IOException e) {
+            log.error("Failed to get backup directory names", e);
+            ExceptionPopup p = new ExceptionPopup(e, "バックアップフォルダ名の取得に失敗しました",
+              "BackupManagerController#updateUI");
+            p.pop();
+          } finally {
+            this.backupFolderListView.setItems(items);
+          }
+        });
+      this.directoryScanner.addDirectoryProcessedListener(event -> Platform.runLater(() -> this.backupFolderListView.setDisable(false)));
+      this.directoryScanner.scanDirectory(this.backupService.getBackupPath().toString());
+      this.backupFolderListView.setDisable(true);
+    }
+  }
+
+  private void listViewSelectionChanged(ObservableValue<? extends String> observable, String before, String after) {
+    BackupDirAttributes attr = this.attributesCache.computeIfAbsent(after, k ->
+      this.directoryScanner.getBackups()
+        .parallelStream()
+        .filter(attribute -> attribute.dirName().equals(k)).findFirst()
+        .orElseThrow(() -> {
+          log.warn("No attributes found for backup directory: {}", k);
+          return new IllegalStateException("No attributes found for backup directory: " + k);
+        }));
+    updateAttributeDetail(after, attr);
+  }
+
+  private void updateAttributeDetail(String after, BackupDirAttributes attr) {
+    this.textFieldBackupFolderName.setText(after);
+    this.labelBackupDateCreated.setText(attr.createdAt().toString());
+    this.labelBackupKind.setText(attr.isSpecial() ? "特別" : "通常");
+
+    String[] units = new String[] { "B", "KB", "MB", "GB", "TB" };
+    int unitIndex = (int) (Math.log10(attr.size()) / 3);
+    double unitValue = 1 << (unitIndex * 10);
+
+    String readableSize = new DecimalFormat("#,##0.###")
+      .format(attr.size() / unitValue) + " "
+      + units[unitIndex];
+    this.labelBackupDataSize.setText(readableSize);
+    this.labelCountBackedupWorlds.setText(String.valueOf(attr.savedWorldCount()));
   }
 
   private void updateListView() {
     ObservableList<String> newItems = FXCollections.observableArrayList();
     try {
-      newItems.addAll(MainController.backupUtils.getBackupDirPaths().parallelStream().map(p -> p.getFileName().toString()).toList());
+      newItems.addAll(backupService.getBackupDirPaths().parallelStream().map(p -> p.getFileName().toString()).toList());
     } catch (IOException e) {
       log.error("Failed to get backup directory names", e);
       ExceptionPopup p = new ExceptionPopup(e, "バックアップフォルダ名の取得に失敗しました",
@@ -134,14 +139,20 @@ public class BackupManagerController {
       p.pop();
     } finally {
       this.backupFolderListView.setItems(newItems);
+      this.directoryScanner.scanDirectory(this.backupService.getBackupPath().toString());
     }
   }
 
   @FXML
   private void onDeleteButtonClicked() {
+    if (backupService == null) {
+      log.error("BackupService has not been set");
+      return;
+    }
+    
     List<Path> dirList;
     try {
-      dirList = MainController.backupUtils.getBackupDirPaths();
+      dirList = backupService.getBackupDirPaths();
     } catch (IOException ex) {
       log.error("Failed to traverse backup directories", ex);
       ExceptionPopup p = new ExceptionPopup(ex, "バックアップフォルダの走査に失敗しました",
@@ -149,6 +160,7 @@ public class BackupManagerController {
       p.pop();
       return;
     }
+    
     dirList
       .parallelStream()
       .filter(d -> d.getFileName()
@@ -167,7 +179,7 @@ public class BackupManagerController {
         alert.showAndWait().ifPresentOrElse(response -> {
           if(response == ButtonType.OK) {
             try {
-              MainController.backupUtils.deleteBackupRecursively(d);
+              backupService.deleteBackupRecursively(d);
             } catch (IOException ex) {
               log.error("Failed to delete backup", ex);
               ExceptionPopup p = new ExceptionPopup(ex, "バックアップの削除に失敗しました",
@@ -208,9 +220,14 @@ public class BackupManagerController {
 
   @FXML
   private void onCopyDirectoryButtonClicked() {
+    if (backupService == null) {
+      log.error("BackupService has not been set");
+      return;
+    }
+    
     List<Path> dirList;
     try {
-      dirList = MainController.backupUtils.getBackupDirPaths();
+      dirList = backupService.getBackupDirPaths();
     } catch (IOException ex) {
       log.error("Failed to traverse backup directories", ex);
       ExceptionPopup p = new ExceptionPopup(ex, "バックアップフォルダの走査に失敗しました",
@@ -236,7 +253,7 @@ public class BackupManagerController {
         alert.showAndWait().ifPresentOrElse(response -> {
           if(response == ButtonType.OK) {
             try {
-              MainController.backupUtils.duplicate(d);
+              backupService.duplicate(d);
             } catch (IOException ex) {
               log.error("Failed to copy backup", ex);
               ExceptionPopup p = new ExceptionPopup(ex, "バックアップのコピーに失敗しました",
@@ -253,8 +270,13 @@ public class BackupManagerController {
   }
 
   public void onRestoreWorldButtonClicked(ActionEvent actionEvent) throws IOException {
+    if (backupService == null) {
+      log.error("BackupService has not been set");
+      return;
+    }
+    
     String selectedWorld = backupFolderListView.getSelectionModel().getSelectedItem();
-    Path selectedWorldPath = MainController.backupUtils.getBackupDirPaths().stream()
+    Path selectedWorldPath = backupService.getBackupDirPaths().stream()
       .filter(p -> p.getFileName().toString().equals(selectedWorld))
       .findFirst()
       .orElseThrow();
@@ -267,7 +289,7 @@ public class BackupManagerController {
     alert.showAndWait().ifPresent(response -> {
       if (response == ButtonType.OK) {
         try {
-          MainController.backupUtils.restoreBackup(selectedWorldPath);
+          backupService.restoreBackup(selectedWorldPath);
           Alert info = new Alert(Alert.AlertType.INFORMATION);
           info.setTitle("ワールドの復元");
           info.setHeaderText("ワールドの復元が完了しました");
@@ -286,5 +308,17 @@ public class BackupManagerController {
         log.warn("Neither OK nor CANCEL button clicked");
       }
     });
+  }
+  
+  public void setBackupService(BackupService backupService) {
+    this.backupService = backupService;
+    try {
+      updateUI();
+    } catch (IOException e) {
+      log.error("Failed to update UI after setting backup service", e);
+      ExceptionPopup p = new ExceptionPopup(e, "UIの更新に失敗しました", 
+        "BackupManagerController#setBackupService");
+      p.pop();
+    }
   }
 }
