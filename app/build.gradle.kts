@@ -61,6 +61,7 @@ dependencies {
     // test dependencies
     testImplementation(libs.bundles.testlibs)
     testRuntimeOnly(libs.jupiter.engine)
+    testRuntimeOnly(libs.jupiter.launcher)
 
     // annotation processor
     annotationProcessor(libs.bundles.annotationProcess)
