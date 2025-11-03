@@ -13,7 +13,7 @@ plugins {
 }
 
 group = "io.github.hizumiaoba"
-version = "1.2.1"
+version = "1.2.2"
 
 java {
   toolchain {
@@ -62,6 +62,7 @@ dependencies {
     // test dependencies
     testImplementation(libs.bundles.testlibs)
     testRuntimeOnly(libs.jupiter.engine)
+    testRuntimeOnly(libs.jupiter.launcher)
 
     // annotation processor
     annotationProcessor(libs.bundles.annotationProcess)
