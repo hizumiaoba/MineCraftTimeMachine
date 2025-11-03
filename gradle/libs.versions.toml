@@ -6,7 +6,7 @@ jackson = "2.19.2"
 
 [libraries]
 logback = { group = "ch.qos.logback", name = "logback-classic", version = "1.5.18" }
-guava = { group = "com.google.guava", name = "guava", version = "33.4.8-jre" }
+guava = { group = "com.google.guava", name = "guava", version = "33.5.0-jre" }
 sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version = "3.50.3.0" }
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
 jakarta-annotation = { group = "jakarta.annotation", name = "jakarta.annotation-api", version.ref = "jakarta" }
@@ -15,10 +15,9 @@ junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.r
 jupiter-engine = { group = "org.junit.platform", name = "junit-platform-engine", version.ref = "junit" }
 jupiter-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit" }
 truth = { group = "com.google.truth", name = "truth", version = "1.4.4" }
-mockito = { group = "org.mockito", name = "mockito-core", version = "5.18.0" }
+mockito = { group = "org.mockito", name = "mockito-core", version = "5.20.0" }
 gh-api = { group = "org.kohsuke", name = "github-api", version = "1.326" }
-kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version = "2.2.21" }
-okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "4.12.0" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "5.2.1" }
 jackson-core = { group = "com.fasterxml.jackson.core", name = "jackson-core", version.ref = "jackson" }
 jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "jackson" }
 jackson-annotations = { group = "com.fasterxml.jackson.core", name = "jackson-annotations", version.ref = "jackson" }
