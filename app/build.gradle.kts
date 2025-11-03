@@ -40,8 +40,6 @@ javafx {
 }
 
 dependencies {
-    implementation(libs.kotlin.stdlib)
-
     implementation(libs.logback)
     implementation(libs.guava)
     // https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
@@ -90,6 +88,11 @@ jlink {
     )
     launcher {
         name = "MinecraftTimeMachine"
+    }
+    // exclusion to avoid mergedModule creation failure
+    mergedModule {
+      excludeRequires("kotlin.stdlib")
+      excludeRequires("okhttp3")
     }
     jpackage {
         appVersion = version.toString()

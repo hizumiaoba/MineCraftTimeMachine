@@ -1,7 +1,6 @@
 module io.github.hizumiaoba.mctimemachine {
   requires javafx.controls;
   requires javafx.fxml;
-  requires kotlin.stdlib;
   requires java.desktop;
   requires java.security.sasl;
   requires org.xerial.sqlitejdbc;
@@ -15,7 +14,6 @@ module io.github.hizumiaoba.mctimemachine {
   requires org.apache.commons.io;
   requires okhttp3;
   requires org.kohsuke.github.api;
-  requires okio;
   requires com.fasterxml.jackson.core;
   requires com.fasterxml.jackson.databind;
   requires com.fasterxml.jackson.annotation;
