@@ -1,91 +1,144 @@
-# This file enables app bump versions automatically.
-
-name: Bump version
+name: Release Build & Draft
 
 on:
   push:
     tags:
       - 'v*'
+    branches:
+      - 'release/v*'
+
+permissions:
+  contents: write
 
 jobs:
-  create-release:
+  build-and-package:
+    name: Build on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            file_ext: deb
+            archive_ext: tar.gz
+          - os: macos-latest
+            file_ext: dmg
+            archive_ext: tar.gz
+          - os: windows-latest
+            file_ext: msi
+            archive_ext: zip
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      # ビルド実行
+      - name: Build and Package
+        uses: gradle/gradle-build-action@v3
+        with:
+          arguments: |
+            jpackageImage
+            -i
+            --no-daemon
+
+      # === ポータブル版の圧縮処理（追加箇所） ===
+
+      # Windows用: ディレクトリを探してZip圧縮
+      - name: Archive Portable (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $buildDir = "app/build/jpackage"
+          # ディレクトリのみを取得 (インストーラーを除外)
+          $appDir = Get-ChildItem -Path $buildDir -Directory | Select-Object -First 1
+          
+          if ($appDir) {
+            $zipName = "$($appDir.Name)-win.zip"
+            Write-Host "Found app directory: $($appDir.FullName). Archiving to $zipName..."
+            Compress-Archive -Path $appDir.FullName -DestinationPath "$buildDir\$zipName"
+          } else {
+            Write-Host "Portable directory not found. Skipping."
+          }
+
+      # Mac/Linux用: ディレクトリを探してtar.gz圧縮
+      - name: Archive Portable (Mac/Linux)
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          cd app/build/jpackage
+          # ディレクトリのみを検索（Macの.appもディレクトリとして扱われる）
+          APP_DIR=$(ls -d */ | head -n 1 | sed 's/\///')
+          
+          if [ -n "$APP_DIR" ]; then
+            ARCHIVE_NAME="${APP_DIR%.*}-${{ matrix.os }}.tar.gz"
+            echo "Found app directory: $APP_DIR. Archiving to $ARCHIVE_NAME..."
+            tar -czf "$ARCHIVE_NAME" "$APP_DIR"
+          else
+            echo "Portable directory not found. Skipping."
+          fi
+
+      # === アップロード処理の更新 ===
+
+      # インストーラー(*.msi, *.dmg) と 圧縮ファイル(*.zip, *.tar.gz) の両方をアップロード
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: MinecraftTimeMachine-${{ matrix.os }}
+          # 複数の拡張子をワイルドカードで指定
+          path: |
+            app/build/jpackage/*.${{ matrix.file_ext }}
+            app/build/jpackage/*.${{ matrix.archive_ext }}
+          retention-days: 1
+
+  create-draft-release:
+    needs: build-and-package
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Create new Release with gh release
-        run: gh release create --draft --generate-notes $TAG_REF --title "Release $TAG_REF"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_REF: ${{ github.ref }}
-
-  compile:
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
-      - name: Grant execution permission for wrapper file
-        run: chmod +x ./gradlew ./gradlew.bat
-      - name: Gradle build action
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: |
-            build
-            --refresh-dependencies
-            --no-build-cache
-            --rerun-tasks
+          fetch-depth: 0
 
-  artifact-upload:
-    needs: compile
-    strategy:
-        matrix:
-            os:
-                - windows-latest
-                - ubuntu-latest
-                - macos-latest
-
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      # すべてのアーティファクト（インストーラー + ポータブル版）をダウンロード
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
-      - name: Grant execution permission for wrapper file
-        run: chmod +x ./gradlew ./gradlew.bat
-      - name: Gradle build action
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: |
-            jpackage
-            --stacktrace
-      - name: Extract version from tag
-        id: extract-version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+          pattern: MinecraftTimeMachine-*
+          path: dist
+          merge-multiple: true
 
-      - name: Set file extension
-        id: set-extension
+      - name: Generate Release Notes Links
+        id: notes
         run: |
-            if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-              echo "FILE_EXT=msi" >> $GITHUB_ENV
-            elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-              echo "FILE_EXT=deb" >> $GITHUB_ENV
-            elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-              echo "FILE_EXT=dmg" >> $GITHUB_ENV
-            fi
-      - name: Upload artifact to release draft
-        run: gh release upload ${GITHUB_REF#refs/tags/} app/build/jpackage/MinecraftTimeMachine-${{ env.VERSION }}.${{ env.FILE_EXT }} --clobber
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            DIFF_LINK="Initial Release"
+          else
+            DIFF_LINK="https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${{ github.ref_name }}"
+          fi
+          echo "DIFF_LINK=$DIFF_LINK" >> $GITHUB_ENV
+
+      - name: Create Release Draft with Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          prerelease: false
+          name: "Release ${{ github.ref_name }}"
+          # distフォルダ内の全ファイル（インストーラーとzip/tar.gz）を添付
+          files: dist/*
+          body: |
+            ## タスク（課題チケット）ごとのリリースノートはこちら
+            - [タスクごとのリリースノート]()
+            
+            ## コミット（作業履歴）に基づいたリリースノートはこちら
+            - [前回バージョンからの作業履歴](${{ env.DIFF_LINK }})
