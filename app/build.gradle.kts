@@ -149,12 +149,6 @@ jlink {
                     "--linux-menu-group",
                     "MinecraftTimeMachine",
                     "--linux-shortcut",
-                    "--linux-shortcut-directory",
-                    "/usr/share/applications",
-                    "--linux-shortcut-name",
-                    "MinecraftTimeMachine",
-                    "--linux-shortcut-icon",
-                    "${projectDir}/src/main/resources/assets/icon.png"
                 )
             )
         }
