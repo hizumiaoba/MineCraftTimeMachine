@@ -16,8 +16,9 @@ group = "io.github.hizumiaoba"
 version = "1.2.2"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+  toolchain {
+      languageVersion.set(JavaLanguageVersion.of(21))
+  }
 }
 
 repositories {
@@ -35,7 +36,7 @@ application {
 }
 
 javafx {
-    version = "17.0.6"
+    version = "21"
     modules = mutableListOf("javafx.controls", "javafx.fxml")
 }
 
